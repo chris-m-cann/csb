@@ -1,1 +1,3 @@
 */_build
+*/.vscode
+linked_list/configure_cmake.sh
