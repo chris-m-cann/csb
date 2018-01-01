@@ -1,0 +1,14 @@
+---
+BinPackArguments: 'false'
+BinPackParameters: 'true'
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Allman
+BreakStringLiterals: 'true'
+ColumnLimit: '80'
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+ConstructorInitializerIndentWidth: '6'
+IndentWidth: '4'
+Language: Cpp
+NamespaceIndentation: All
+
+...
