@@ -1,6 +1,6 @@
 #pragma once
 
-#include "concepts.hpp"
+#include <core/concepts.hpp>
 
 #include <cassert>
 #include <forward_list>

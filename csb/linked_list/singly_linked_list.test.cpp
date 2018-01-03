@@ -1,7 +1,7 @@
 #include "singly_linked_list.hpp"
 
-#include "catch_util.hpp"
-#include "is_regular_test.hpp"
+#include <core/catch_util.hpp>
+#include <core/is_regular_test.hpp>
 
 #include <catch/catch.hpp>
 
