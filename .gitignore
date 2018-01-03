@@ -1,6 +1,3 @@
 **/_build
 **/.vscode
 **/configure_cmake.sh
-#csb/linked_list/_build
-#csb/linked_list/.vscode
-#csb/linked_list/configure_cmake.sh
