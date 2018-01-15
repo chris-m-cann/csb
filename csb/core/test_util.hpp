@@ -119,6 +119,56 @@ namespace test
     {
         return {};
     }
+
+            class custom
+        {
+          public:
+            custom(int i) : i(i) {}
+            custom() : custom(0) {}
+
+            friend bool operator==(custom const &l, custom const &r)
+            {
+                return l.i == r.i;
+            }
+            friend bool operator!=(custom const &l, custom const &r)
+            {
+                return !(l == r);
+            }
+            friend bool operator<(custom const &l, custom const &r)
+            {
+                return l.i < r.i;
+            }
+            friend bool operator>(custom const &l, custom const &r)
+            {
+                return r < l;
+            }
+            friend bool operator<=(custom const &l, custom const &r)
+            {
+                return !(r < l);
+            }
+            friend bool operator>=(custom const &l, custom const &r)
+            {
+                return !(l < r);
+            }
+
+            int i = 0;
+        };
+
+        class custom_data_generator
+        {
+          public:
+            custom operator()() { return {i++}; }
+
+          private:
+            int i = 0;
+        };
+
+
+        struct int_data_generator
+        {
+            int next = 0;
+            int operator()() { return next++; }
+        };
 }
 
 #define GIVEN_V(msg, ...) GIVEN(test::impl::stringify(msg, __VA_ARGS__))

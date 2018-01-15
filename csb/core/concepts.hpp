@@ -26,6 +26,10 @@ namespace csb
         {
             using type = T;
         };
+        template <typename T> struct value_type<T const*>
+        {
+            using type = T;
+        };
 
         template <typename T>
         using value_t = typename value_type<std::remove_reference_t<T>>::type;

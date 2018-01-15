@@ -1,6 +1,6 @@
 #include "singly_linked_list.hpp"
 
-#include <core/catch_util.hpp>
+#include <core/test_util.hpp>
 #include <core/is_regular_test.hpp>
 
 #include <catch/catch.hpp>
@@ -20,57 +20,9 @@ namespace test
             using sut_t = csb::singly_linked_list<int>;
             using data_t = int;
 
-            struct data_generator
-            {
-                int next = 0;
-                int operator()() { return next++; }
-            };
 
             sut_t create_sut() const { return {}; }
-            data_generator data_source() const { return {}; }
-        };
-
-        class custom
-        {
-          public:
-            custom(int i) : i(i) {}
-            custom() : custom(0) {}
-
-            friend bool operator==(custom const &l, custom const &r)
-            {
-                return l.i == r.i;
-            }
-            friend bool operator!=(custom const &l, custom const &r)
-            {
-                return !(l == r);
-            }
-            friend bool operator<(custom const &l, custom const &r)
-            {
-                return l.i < r.i;
-            }
-            friend bool operator>(custom const &l, custom const &r)
-            {
-                return r < l;
-            }
-            friend bool operator<=(custom const &l, custom const &r)
-            {
-                return !(r < l);
-            }
-            friend bool operator>=(custom const &l, custom const &r)
-            {
-                return !(l < r);
-            }
-
-            int i = 0;
-        };
-
-        class custom_data_generator
-        {
-          public:
-            custom operator()() { return {i++}; }
-
-          private:
-            int i = 0;
+            int_data_generator data_source() const { return {}; }
         };
 
         struct custom_generator

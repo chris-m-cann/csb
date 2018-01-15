@@ -1,6 +1,6 @@
 #pragma once
 
-#include "catch_util.hpp"
+#include "test_util.hpp"
 #include "concepts.hpp"
 
 #include <catch/catch.hpp>
