@@ -131,6 +131,39 @@ namespace test
         equality(custom_generator<5>{});
     }
 
+
+    SCENARIO("copyable", "static_array")
+    {
+        csb::static_array<int, 3> i{1, 2, 3};
+        copyable(i,
+                 [](auto &array) { ++array.front(); },
+                 "modify front");
+
+        custom_data_generator gen;
+        csb::static_array<custom, 3> c(gen());
+        copyable(c,
+                 [&](auto &array) { array.front() = gen(); },
+                 "modify front of custom array");
+    }
+
+    SCENARIO("moveable")
+    {
+        csb::static_array<int, 1> i{1};
+        csb::static_array<int, 1> expected{1};
+        moveable(i, expected);
+
+        expected.front() = i.front() = 42;
+        moveable(i, expected);
+
+        csb::static_array<custom, 2> c;
+        csb::static_array<custom, 2> cexpected;
+        moveable(c, cexpected);
+
+        cexpected[1] = c[1] = custom(42);
+        moveable(c, cexpected);
+    }
+
+
     using namespace csb;
     SCENARIO("Range init")
     {
