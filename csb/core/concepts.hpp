@@ -103,8 +103,9 @@ namespace csb
 
         template <typename T> concept bool Iterator()
         {
-            return EqualityComparable<T>() && Incrementable<T>() &&
-                   requires(T it)
+            return EqualityComparable<T>() 
+            && Incrementable<T>() 
+            && requires(T it)
             {
                 typename value_t<T>;
                 // clang-format off
@@ -134,9 +135,10 @@ namespace csb
                 return requires(T & t)
                 {
                     // clang-format off
-                    {begin(t)}->Iterator;
+                    {begin(t)};
                     {end(t)};
                     // clang-format oon
+                    Iterator<decltype(begin(t))>();
                     Sentinel<decltype(begin(t)), decltype(end(t))>();
                 };
             }
