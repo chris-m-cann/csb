@@ -881,13 +881,13 @@ namespace test
         reverse(custom_generator());
     }
 
-    SCENARIO("equality")
+    SCENARIO("linked list equality")
     {
         equality(int_generator());
         equality(custom_generator());
     }
 
-    SCENARIO("copyable")
+    SCENARIO("linked list copyable")
     {
         csb::singly_linked_list<int> i;
         copyable(i,
@@ -908,7 +908,7 @@ namespace test
                  "modify single element (singly_linked_list<custom>)");
     }
 
-    SCENARIO("moveable")
+    SCENARIO("linked list moveable")
     {
         csb::singly_linked_list<int> i;
         csb::singly_linked_list<int> expected;

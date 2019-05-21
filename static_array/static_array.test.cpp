@@ -1,11 +1,9 @@
-#include <static_array/static_array.hpp>
+#include "static_array.hpp"
 
 #include <core/test_util.hpp>
 #include <core/is_regular_test.hpp>
 
 #include <catch/catch.hpp>
-
-
 
 
 namespace test

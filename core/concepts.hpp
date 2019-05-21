@@ -3,9 +3,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace csb
-{
-    namespace ccept
+namespace csb::ccept
     {
         template <typename T, typename = void> struct value_type
         {
@@ -188,4 +186,3 @@ namespace csb
             return requires(std::ostream & os, T t){{os << t}->std::ostream & };
         }
     }
-}
