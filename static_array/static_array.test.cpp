@@ -134,7 +134,8 @@ namespace test
         copyable(c,
                  [&](auto &array) { array.front() = gen(); },
                  "modify front of custom array"
-                 );
+
+        );
     }
 
     SCENARIO("moveable")
@@ -229,4 +230,4 @@ namespace test
             }
         }
     }
-}
+} // namespace test
