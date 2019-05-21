@@ -1,7 +1,7 @@
 #include "singly_linked_list.hpp"
 
-#include <core/test_util.hpp>
 #include <core/is_regular_test.hpp>
+#include <core/test_util.hpp>
 
 #include <catch/catch.hpp>
 
@@ -20,7 +20,6 @@ namespace test
             using sut_t = csb::singly_linked_list<int>;
             using data_t = int;
 
-
             sut_t create_sut() const { return {}; }
             int_data_generator data_source() const { return {}; }
         };
@@ -33,7 +32,7 @@ namespace test
             sut_t create_sut() const { return {}; }
             custom_data_generator data_source() const { return {}; }
         };
-    }
+    } // namespace
 
     template <> struct arg_printer<csb::singly_linked_list<int>>
     {

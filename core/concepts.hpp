@@ -4,135 +4,132 @@
 #include <type_traits>
 
 namespace csb::ccept
+{
+    template <typename T, typename = void> struct value_type
     {
-        template <typename T, typename = void> struct value_type
-        {
-        };
+    };
 
-        template <typename T>
-        struct value_type<T, std::void_t<typename T::value_type>>
-        {
-            using type = typename T::value_type;
-        };
-        template <typename T>
-        struct value_type<T, std::void_t<typename T::value_t>>
-        {
-            using type = typename T::value_t;
-        };
+    template <typename T>
+    struct value_type<T, std::void_t<typename T::value_type>>
+    {
+        using type = typename T::value_type;
+    };
+    template <typename T> struct value_type<T, std::void_t<typename T::value_t>>
+    {
+        using type = typename T::value_t;
+    };
 
-        template <typename T> struct value_type<T *>
-        {
-            using type = T;
-        };
-        template <typename T> struct value_type<T const*>
-        {
-            using type = T;
-        };
+    template <typename T> struct value_type<T *>
+    {
+        using type = T;
+    };
+    template <typename T> struct value_type<T const *>
+    {
+        using type = T;
+    };
 
-        template <typename T>
-        using value_t = typename value_type<std::remove_reference_t<T>>::type;
+    template <typename T>
+    using value_t = typename value_type<std::remove_reference_t<T>>::type;
 
-        template <typename T, typename U> concept bool Same()
-        {
-            return std::is_same_v<T, U>;
-        }
+    template <typename T, typename U> concept bool Same()
+    {
+        return std::is_same_v<T, U>;
+    }
 
-        template <typename T> concept bool DefaultConstructible()
-        {
-            return std::is_default_constructible_v<T>;
-        }
+    template <typename T> concept bool DefaultConstructible()
+    {
+        return std::is_default_constructible_v<T>;
+    }
 
-        template <typename T> concept bool CopyConstructible()
-        {
-            return std::is_copy_constructible_v<T>;
-        }
+    template <typename T> concept bool CopyConstructible()
+    {
+        return std::is_copy_constructible_v<T>;
+    }
 
-        template <typename T> concept bool CopyAssignable()
-        {
-            return std::is_copy_assignable_v<T>;
-        }
+    template <typename T> concept bool CopyAssignable()
+    {
+        return std::is_copy_assignable_v<T>;
+    }
 
-        template <typename T> concept bool Copyable()
-        {
-            return CopyConstructible<T>() && CopyAssignable<T>();
-        }
+    template <typename T> concept bool Copyable()
+    {
+        return CopyConstructible<T>() && CopyAssignable<T>();
+    }
 
-        template <typename T> concept bool Semiregular()
-        {
-            return DefaultConstructible<T>() && Copyable<T>();
-        }
+    template <typename T> concept bool Semiregular()
+    {
+        return DefaultConstructible<T>() && Copyable<T>();
+    }
 
-        template <typename R, typename L> concept bool EqualityComparable()
+    template <typename R, typename L> concept bool EqualityComparable()
+    {
+        return requires(R r, L l)
         {
-            return requires(R r, L l)
-            {
-                // clang-format off
+            // clang-format off
                 {r == l}->bool;
                 {r != l}->bool;
                 {l == r}->bool;
                 {l != r}->bool;
-                // clang-format on
-            };
-        }
+            // clang-format on
+        };
+    }
 
-        template <typename T> concept bool EqualityComparable()
-        {
-            return EqualityComparable<T, T>();
-        }
+    template <typename T> concept bool EqualityComparable()
+    {
+        return EqualityComparable<T, T>();
+    }
 
-        template <typename T> concept bool Regular()
-        {
-            return Semiregular<T>() && EqualityComparable<T>();
-        }
+    template <typename T> concept bool Regular()
+    {
+        return Semiregular<T>() && EqualityComparable<T>();
+    }
 
-        //=============================================================================
-        // range related
-        //=============================================================================
-        template <typename T> concept bool Incrementable()
+    //=============================================================================
+    // range related
+    //=============================================================================
+    template <typename T> concept bool Incrementable()
+    {
+        return requires(T it)
         {
-            return requires(T it)
-            {
-                // clang-format off
+            // clang-format off
                 {++it}->T &;
                 {it++}->T;
-                // clang-format on
-            };
-        }
+            // clang-format on
+        };
+    }
 
-        template <typename T> concept bool Iterator()
+    template <typename T> concept bool Iterator()
+    {
+        return EqualityComparable<T>() && Incrementable<T>() && requires(T it)
         {
-            return EqualityComparable<T>() 
-            && Incrementable<T>() 
-            && requires(T it)
-            {
-                typename value_t<T>;
-                // clang-format off
+            typename value_t<T>;
+            // clang-format off
                 {*it}->value_t<T> const &;
-                // clang-format on
-            };
-        }
+            // clang-format on
+        };
+    }
 
-        template <typename T, typename Iter> concept bool Sentinel()
+    template <typename T, typename Iter> concept bool Sentinel()
+    {
+
+        return EqualityComparable<T, Iter>();
+    }
+
+    template <typename T>
+    using iterator_t = decltype(std::begin(std::declval<T>()));
+    template <typename T>
+    using sentinel_t = decltype(std::end(std::declval<T>()));
+
+    namespace impl
+    {
+        using std::begin;
+        using std::end;
+
+        template <typename T> concept bool Range()
         {
-
-            return EqualityComparable<T, Iter>();
-        }
-
-        template <typename T>
-        using iterator_t = decltype(std::begin(std::declval<T>()));
-        template <typename T>
-        using sentinel_t = decltype(std::end(std::declval<T>()));
-
-        namespace impl
-        {
-            using std::begin;
-            using std::end;
-
-            template <typename T> concept bool Range()
+            return requires(T & t)
             {
-                return requires(T & t)
-                {
-                    // clang-format off
+                // clang-format off
                     {begin(t)};
                     {end(t)};
                     // clang-format oon
@@ -173,16 +170,16 @@ namespace csb::ccept
                 // clang-format off
                 {std::apply(t, std::move(args))}
                     ->signature_return_t<Sig>;
-                // clang-format on
-            };
-        }
-
-        //=============================================================================
-        // utility
-        //=============================================================================
-
-        template <typename T> concept bool Streamable()
-        {
-            return requires(std::ostream & os, T t){{os << t}->std::ostream & };
-        }
+            // clang-format on
+        };
     }
+
+    //=============================================================================
+    // utility
+    //=============================================================================
+
+    template <typename T> concept bool Streamable()
+    {
+        return requires(std::ostream & os, T t){{os << t}->std::ostream & };
+    }
+} // namespace csb::ccept

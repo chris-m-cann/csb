@@ -1,17 +1,15 @@
 #include "static_array.hpp"
 
-#include <core/test_util.hpp>
 #include <core/is_regular_test.hpp>
+#include <core/test_util.hpp>
 
 #include <catch/catch.hpp>
-
 
 namespace test
 {
     namespace
     {
-        template<int i = 3>
-        struct int_generator
+        template <int i = 3> struct int_generator
         {
             using sut_t = csb::static_array<int, i>;
             using data_t = int;
@@ -19,8 +17,7 @@ namespace test
             sut_t create_sut() const { return {}; }
             int_data_generator data_source() const { return {}; }
         };
-        template<int i = 3>
-        struct custom_generator
+        template <int i = 3> struct custom_generator
         {
             using sut_t = csb::static_array<custom, i>;
             using data_t = custom;
@@ -28,7 +25,7 @@ namespace test
             sut_t create_sut() const { return {}; }
             custom_data_generator data_source() const { return {}; }
         };
-    }
+    } // namespace
 
     template <int size> struct arg_printer<csb::static_array<int, size>>
     {
@@ -44,7 +41,7 @@ namespace test
             return os;
         }
     };
-    
+
     template <int size> struct arg_printer<csb::static_array<custom, size>>
     {
         static std::ostream &print(std::ostream &os,
@@ -65,7 +62,6 @@ namespace test
     {
         return csb::static_array<int, size>{std::forward<Args>(args)...};
     }
-
 
     auto data_generator() { return int_data_generator(); }
 
@@ -89,7 +85,6 @@ namespace test
         not_empty.assign(in);
         also_not_empty.assign(in);
         not_empty_as_well.assign(in);
-
 
         // different values are !=
         // different orders are !=
@@ -129,13 +124,10 @@ namespace test
         equality(custom_generator<5>{});
     }
 
-
     SCENARIO("copyable", "static_array")
     {
         csb::static_array<int, 3> i{1, 2, 3};
-        copyable(i,
-                 [](auto &array) { ++array.front(); },
-                 "modify front");
+        copyable(i, [](auto &array) { ++array.front(); }, "modify front");
 
         custom_data_generator gen;
         csb::static_array<custom, 3> c(gen());
@@ -160,7 +152,6 @@ namespace test
         cexpected[1] = c[1] = custom(42);
         moveable(c, cexpected);
     }
-
 
     using namespace csb;
     SCENARIO("Range init")
@@ -211,7 +202,7 @@ namespace test
         constexpr int a = arr[1];
         static_assert(a == 2, "grr");
     }
-        
+
     SCENARIO("at")
     {
         constexpr csb::static_array<int, 3> arr{1, 2, 3};

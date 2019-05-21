@@ -24,14 +24,14 @@ namespace csb
         };
 
         template <typename T> using next_t = typename node<T>::next_t;
-    }
+    } // namespace impl
     template <ccept::Regular T> class singly_linked_list_iterator;
     template <ccept::Regular T> class const_singly_linked_list_iterator;
     template <ccept::Regular T> class singly_linked_list;
 
     template <ccept::Regular T>
     singly_linked_list_iterator<T> before(singly_linked_list<T> &list,
-                                   singly_linked_list_iterator<T> pos);
+                                          singly_linked_list_iterator<T> pos);
 
     template <ccept::Regular T>
     singly_linked_list_iterator<T> last(singly_linked_list<T> &list);
@@ -48,7 +48,9 @@ namespace csb
         using iterator_category = std::forward_iterator_tag;
 
         singly_linked_list_iterator() noexcept = default;
-        singly_linked_list_iterator(impl::node<T> *ndptr) noexcept : _ptr(ndptr) {}
+        singly_linked_list_iterator(impl::node<T> *ndptr) noexcept : _ptr(ndptr)
+        {
+        }
         singly_linked_list_iterator(impl::next_t<T> &ndptr) noexcept
               : _ptr(ndptr.get())
         {
@@ -60,7 +62,7 @@ namespace csb
             return *this;
         }
 
-        singly_linked_list_iterator operator++(int)noexcept
+        singly_linked_list_iterator operator++(int) noexcept
         {
             auto prev = *this;
             _ptr = next().get();
@@ -111,14 +113,16 @@ namespace csb
         using iterator_category = std::forward_iterator_tag;
 
         const_singly_linked_list_iterator() noexcept = default;
-        const_singly_linked_list_iterator(impl::node<T> *ndptr) noexcept : _ptr(ndptr)
+        const_singly_linked_list_iterator(impl::node<T> *ndptr) noexcept
+              : _ptr(ndptr)
         {
         }
         const_singly_linked_list_iterator(impl::next_t<T> const &ndptr) noexcept
               : _ptr(ndptr.get())
         {
         }
-        const_singly_linked_list_iterator(singly_linked_list_iterator<T> it) noexcept
+        const_singly_linked_list_iterator(
+            singly_linked_list_iterator<T> it) noexcept
               : _ptr(it._ptr)
         {
         }
@@ -129,7 +133,7 @@ namespace csb
             return *this;
         }
 
-        const_singly_linked_list_iterator operator++(int)noexcept
+        const_singly_linked_list_iterator operator++(int) noexcept
         {
             auto prev = *this;
             _ptr = next().get();
@@ -428,7 +432,7 @@ namespace csb
 
     template <ccept::Regular T>
     singly_linked_list_iterator<T> before(singly_linked_list<T> &list,
-                                   singly_linked_list_iterator<T> pos)
+                                          singly_linked_list_iterator<T> pos)
     {
         auto trailing = pos;
         auto it = list.begin();
@@ -445,7 +449,8 @@ namespace csb
 
     template <ccept::Regular T, ccept::Invokable<void(T)> Fn>
     void apply_in_reverse_recursive(singly_linked_list_iterator<T> start,
-                                    singly_linked_list_iterator<T> end, Fn const &fn)
+                                    singly_linked_list_iterator<T> end,
+                                    Fn const &fn)
     {
         if (start == end)
             return;
@@ -457,7 +462,8 @@ namespace csb
 
     template <ccept::Regular T, ccept::Invokable<void(T)> Fn>
     void apply_in_reverse_iterative(singly_linked_list_iterator<T> start,
-                                    singly_linked_list_iterator<T> end, Fn const &fn)
+                                    singly_linked_list_iterator<T> end,
+                                    Fn const &fn)
     {
         auto last = end;
         auto current = end;

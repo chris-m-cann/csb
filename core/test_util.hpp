@@ -95,7 +95,7 @@ namespace test
             (oss << ... << try_stream(args));
             return oss.str();
         }
-    }
+    } // namespace impl
 
     template <typename T> using sut_t = typename T::sut_t;
     template <typename T> using data_t = typename T::data_t;

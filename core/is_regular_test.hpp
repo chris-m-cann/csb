@@ -1,7 +1,7 @@
 #pragma once
 
-#include "test_util.hpp"
 #include "concepts.hpp"
+#include "test_util.hpp"
 
 #include <catch/catch.hpp>
 
@@ -106,4 +106,4 @@ namespace csb
             }
         }
     }
-}
+} // namespace csb
