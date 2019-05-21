@@ -133,9 +133,7 @@ namespace test
         csb::static_array<custom, 3> c(gen());
         copyable(c,
                  [&](auto &array) { array.front() = gen(); },
-                 "modify front of custom array"
-
-        );
+                 "modify front of custom array");
     }
 
     SCENARIO("moveable")
