@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/concepts.hpp>
+#include <core/type_traits.hpp>
 
 #include <iostream>
 
@@ -10,8 +10,10 @@ namespace csb
     {
     };
 
-    template <ccept::Regular T, std::size_t n> class static_array
+    template <typename T, std::size_t n> class static_array
     {
+        static_assert(is_regular_v<T>);
+
       public:
         using value_type = T;
         using value_t = T;
@@ -41,7 +43,7 @@ namespace csb
 
         // should I offer this noexpetness in case I end up using lazy
         // initialization??
-        constexpr static_array(value_type const &all) noexcept(
+        explicit constexpr static_array(value_type const &all) noexcept(
             std::is_nothrow_default_constructible_v<value_type>
                 &&std::is_nothrow_copy_assignable_v<value_type>)
               : _store{}
@@ -49,8 +51,8 @@ namespace csb
             fill(all);
         }
 
-        template <ccept::Range R>
-        constexpr static_array(R const &rng) : _store{}
+        template <typename R, typename = std::enable_if_t<is_range_v<R>>>
+        explicit constexpr static_array(R const &rng) : _store{}
         {
             init(rng);
         }
@@ -124,7 +126,11 @@ namespace csb
 
         constexpr size_type size() const noexcept { return n; }
 
-        template <ccept::Range R> constexpr void assign(R const &r) { init(r); }
+        template <typename R, typename = std::enable_if_t<is_range_v<R>>>
+        constexpr void assign(R const &r)
+        {
+            init(r);
+        }
 
         constexpr void fill(value_type const &with) noexcept(
             std::is_nothrow_copy_assignable_v<value_type>)
@@ -144,7 +150,8 @@ namespace csb
         }
 
       private:
-        template <ccept::Range R> constexpr void init(R const &rng)
+        template <typename R, typename = std::enable_if_t<is_range_v<R>>>
+        constexpr void init(R const &rng)
         {
             using std::begin;
             using std::end;
@@ -158,4 +165,4 @@ namespace csb
 
         T _store[n];
     };
-}
+} // namespace csb
