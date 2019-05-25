@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/concepts.hpp>
+#include <core/type_traits.hpp>
 
 #include <cassert>
 #include <forward_list>
@@ -11,8 +11,10 @@ namespace csb
 {
     namespace impl
     {
-        template <ccept::Regular T> struct node
+        template <typename T> struct node
         {
+            static_assert(is_regular_v<T>);
+
             using next_t = std::unique_ptr<node<T>>;
             template <typename... Args>
             node(std::unique_ptr<node<T>> next, Args &&... args)
@@ -25,19 +27,21 @@ namespace csb
 
         template <typename T> using next_t = typename node<T>::next_t;
     } // namespace impl
-    template <ccept::Regular T> class singly_linked_list_iterator;
-    template <ccept::Regular T> class const_singly_linked_list_iterator;
-    template <ccept::Regular T> class singly_linked_list;
+    template <typename T> class singly_linked_list_iterator;
+    template <typename T> class const_singly_linked_list_iterator;
+    template <typename T> class singly_linked_list;
 
-    template <ccept::Regular T>
+    template <typename T>
     singly_linked_list_iterator<T> before(singly_linked_list<T> &list,
                                           singly_linked_list_iterator<T> pos);
 
-    template <ccept::Regular T>
+    template <typename T>
     singly_linked_list_iterator<T> last(singly_linked_list<T> &list);
 
-    template <ccept::Regular T> class singly_linked_list_iterator
+    template <typename T> class singly_linked_list_iterator
     {
+        static_assert(is_regular_v<T>);
+
       public:
         using value_t = T;
 
@@ -101,8 +105,10 @@ namespace csb
         friend class const_singly_linked_list_iterator<T>;
     };
 
-    template <ccept::Regular T> class const_singly_linked_list_iterator
+    template <typename T> class const_singly_linked_list_iterator
     {
+        static_assert(is_regular_v<T>);
+
       public:
         using value_t = T;
 
@@ -162,8 +168,10 @@ namespace csb
         impl::node<T> const *_ptr = nullptr;
     };
 
-    template <ccept::Regular T> class singly_linked_list
+    template <typename T> class singly_linked_list
     {
+        static_assert(is_regular_v<T>);
+
       public:
         using iterator_t = singly_linked_list_iterator<T>;
         using const_iterator_t = const_singly_linked_list_iterator<T>;
@@ -243,7 +251,8 @@ namespace csb
             return front->next.get();
         }
 
-        template <ccept::Range R> iterator_t append(R &&r)
+        template <typename R, typename = std::enable_if_t<is_range_v<R>>>
+        iterator_t append(R &&r)
         {
             using std::begin;
             using std::end;
@@ -430,7 +439,7 @@ namespace csb
         static_assert("lists of references are not allowed");
     };
 
-    template <ccept::Regular T>
+    template <typename T>
     singly_linked_list_iterator<T> before(singly_linked_list<T> &list,
                                           singly_linked_list_iterator<T> pos)
     {
@@ -441,13 +450,13 @@ namespace csb
         return trailing;
     }
 
-    template <ccept::Regular T>
+    template <typename T>
     singly_linked_list_iterator<T> last(singly_linked_list<T> &list)
     {
         return before(list, list.end());
     }
 
-    template <ccept::Regular T, ccept::Invokable<void(T)> Fn>
+    template <typename T, typename Fn, typename = std::is_invocable<Fn, T>>
     void apply_in_reverse_recursive(singly_linked_list_iterator<T> start,
                                     singly_linked_list_iterator<T> end,
                                     Fn const &fn)
@@ -460,7 +469,7 @@ namespace csb
         fn(*it);
     }
 
-    template <ccept::Regular T, ccept::Invokable<void(T)> Fn>
+    template <typename T, typename Fn, typename = std::is_invocable<Fn, T>>
     void apply_in_reverse_iterative(singly_linked_list_iterator<T> start,
                                     singly_linked_list_iterator<T> end,
                                     Fn const &fn)
@@ -482,10 +491,10 @@ namespace csb
         }
     }
 
-    template <ccept::Regular T, ccept::Invokable<void(T)> Fn>
+    template <typename T, typename Fn, typename = std::is_invocable<Fn, T>>
     void apply_in_reverse(singly_linked_list_iterator<T> start,
                           singly_linked_list_iterator<T> end, Fn const &fn)
     {
         apply_in_reverse_iterative(start, end, fn);
     }
-}
+} // namespace csb

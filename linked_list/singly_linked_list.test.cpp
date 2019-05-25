@@ -924,6 +924,9 @@ namespace test
         c.push_back(custom(42));
         cexpected.push_back(custom(42));
         moveable(c, cexpected);
+
+        int arr[] = {1, 2, 3};
+        auto s = std::begin(arr);
     }
 
     SCENARIO("merging 2 sorted linked lists")
@@ -931,4 +934,4 @@ namespace test
         merge(int_generator());
         merge(custom_generator());
     }
-}
+} // namespace test
