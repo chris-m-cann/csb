@@ -1,172 +1,226 @@
-#include "static_array.hpp"
+//
+// Created by chris on 25/05/19.
+//
 
-#include <core/is_regular_test.hpp>
-#include <core/test_util.hpp>
+#include <cstddef>
+#include <utility>
 
 #include <catch/catch.hpp>
 
-namespace test
+#include "static_array.hpp"
+#include <core/type_traits.hpp>
+
+namespace csb::test
 {
-    namespace
+    class custom
     {
-        template <int i = 3> struct int_generator
+      public:
+        custom(int i) : i(i) {}
+        custom() : custom(0) {}
+
+        friend bool operator==(custom const &l, custom const &r)
         {
-            using sut_t = csb::static_array<int, i>;
-            using data_t = int;
-
-            sut_t create_sut() const { return {}; }
-            int_data_generator data_source() const { return {}; }
-        };
-        template <int i = 3> struct custom_generator
+            return l.i == r.i;
+        }
+        friend bool operator!=(custom const &l, custom const &r)
         {
-            using sut_t = csb::static_array<custom, i>;
-            using data_t = custom;
+            return !(l == r);
+        }
+        friend bool operator<(custom const &l, custom const &r)
+        {
+            return l.i < r.i;
+        }
+        friend bool operator>(custom const &l, custom const &r)
+        {
+            return r < l;
+        }
+        friend bool operator<=(custom const &l, custom const &r)
+        {
+            return !(r < l);
+        }
+        friend bool operator>=(custom const &l, custom const &r)
+        {
+            return !(l < r);
+        }
 
-            sut_t create_sut() const { return {}; }
-            custom_data_generator data_source() const { return {}; }
-        };
-    } // namespace
+        int i = 0;
+    };
 
-    template <int size> struct arg_printer<csb::static_array<int, size>>
+    struct move_only
     {
-        static std::ostream &print(std::ostream &os,
-                                   csb::static_array<int, size> const &sa)
+        int i;
+
+        explicit move_only(int i) : i(i) {}
+        move_only(move_only &&) = default;
+        move_only(move_only const &) = delete;
+
+        move_only &operator=(move_only &&) = default;
+        move_only &operator=(move_only const &) = delete;
+
+        friend bool operator==(move_only const &l, move_only const &r)
         {
-            os << "static_array<int>[";
-            for (auto const &i : sa)
-            {
-                os << i << ",";
-            }
-            os << (sa.is_empty() ? "]" : "\b]");
-            return os;
+            return l.i == r.i;
+        }
+
+        friend bool operator!=(move_only const &l, move_only const &r)
+        {
+            return !(l == r);
         }
     };
 
-    template <int size> struct arg_printer<csb::static_array<custom, size>>
+    template <typename... Args> auto create_sut(Args &&... args)
     {
-        static std::ostream &print(std::ostream &os,
-                                   csb::static_array<custom, size> const &sa)
-        {
-            os << "static_array<custom>[";
-            for (auto const &i : sa)
-            {
-                os << i << ",";
-            }
-            os << (sa.is_empty() ? "]" : "\b]");
-            return os;
-        }
-    };
-
-    template <std::size_t size, typename... Args>
-    auto create_sut(Args &&... args)
-    {
-        return csb::static_array<int, size>{std::forward<Args>(args)...};
+        return csb::static_array<int, sizeof...(Args)>{
+            std::forward<Args>(args)...};
     }
 
-    auto data_generator() { return int_data_generator(); }
-
-    template <SutGenerator G> auto equality(G g)
+    SCENARIO("static_array equality")
     {
-        // empty list is reflexive and equal to itself and transitive
-        auto empty = g.create_sut();
-        equality_reflexive(empty);
-        auto also_empty = g.create_sut();
-        equality_symetric(empty, also_empty);
-        auto empty_as_well = g.create_sut();
-        equality_transitive(empty, empty_as_well, also_empty);
-
-        // two lists with the same number of elements in the same sequence
-        auto not_empty = g.create_sut();
-        auto also_not_empty = g.create_sut();
-        auto not_empty_as_well = g.create_sut();
-        auto gen = g.data_source();
-        data_t<G> in[] = {gen(), gen(), gen()};
-
-        not_empty.assign(in);
-        also_not_empty.assign(in);
-        not_empty_as_well.assign(in);
-
-        // different values are !=
-        // different orders are !=
-        GIVEN_T("two lists with the same size", G)
+        // reflexive
+        GIVEN("a static_array a")
         {
-            auto a = g.create_sut();
-            auto b = g.create_sut();
+            auto a = create_sut(1, 2, 3, 4);
 
-            auto gen = g.data_source();
-            auto v1 = gen();
-            auto v2 = gen();
-            auto v3 = gen();
+            THEN("a == a") { REQUIRE(a == a); }
+        }
 
-            WHEN("the values contained are different")
+        GIVEN("2 static_arrays, a and b")
+        {
+            auto a = create_sut(1, 2, 3, 4);
+            auto b = create_sut(1, 2, 3, 4);
+
+            WHEN("a == b")
             {
-                a.fill(v1);
-                b.fill(v2);
-                THEN("they are not equal") { REQUIRE(a != b); }
+                REQUIRE(a == b);
+
+                THEN("b == a") { REQUIRE(b == a); }
             }
-            WHEN("with equal nodes in different orders")
+        }
+
+        GIVEN("3 static_arrays, a, b and c")
+        {
+            auto a = create_sut(1, 2, 3, 4);
+            auto b = create_sut(1, 2, 3, 4);
+            auto c = create_sut(1, 2, 3, 4);
+
+            WHEN("a == b and b == c")
             {
-                auto order1 = {v1, v2, v3};
-                auto order2 = {v2, v1, v3};
-                a.assign(order1);
-                b.assign(order2);
-                THEN("they are not equal") { REQUIRE(a != b); }
+                REQUIRE(a == b);
+                REQUIRE(b == c);
+
+                THEN("a == c") { REQUIRE(a == c); }
+            }
+        }
+
+        GIVEN("2 static_arrays containing the same elements")
+        {
+            auto a = create_sut(1, 2, 3, 4);
+
+            WHEN("those elements are in the same order")
+            {
+                auto b = create_sut(1, 2, 3, 4);
+                THEN("the 2 are equal")
+                {
+                    REQUIRE(a == b);
+                    REQUIRE_FALSE(a != b);
+                }
+            }
+
+            WHEN("those elements are in different orders")
+            {
+                auto b = create_sut(4, 3, 2, 1);
+                THEN("the 2 are not equal")
+                {
+                    REQUIRE(a != b);
+                    REQUIRE_FALSE(a == b);
+                }
             }
         }
     }
 
-    SCENARIO("static_array: equality")
+    SCENARIO("static_array copyable")
     {
-        equality(int_generator<3>{});
-        equality(int_generator<1>{});
+        GIVEN("an array a")
+        {
+            auto a = create_sut(1, 2, 3, 4, 5);
+            WHEN("copy constructing b from a")
+            {
+                decltype(a) b(a);
 
-        equality(custom_generator<1>{});
-        equality(custom_generator<5>{});
+                THEN("a == b") { REQUIRE(a == b); }
+
+                WHEN("altering b")
+                {
+                    b[1]++;
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+
+                WHEN("altering a")
+                {
+                    a[1]++;
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+            }
+
+            WHEN("copy assigning a to b")
+            {
+                auto b = create_sut(9, 8, 7, 6, 5);
+                b = a;
+
+                THEN("a == b") { REQUIRE(a == b); }
+
+                WHEN("altering b")
+                {
+                    b[1]++;
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+
+                WHEN("altering a")
+                {
+                    a[1]++;
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+            }
+        }
     }
 
-    SCENARIO("copyable", "static_array")
+    SCENARIO("static_array movable")
     {
-        csb::static_array<int, 3> i{1, 2, 3};
-        copyable(i, [](auto &array) { ++array.front(); }, "modify front");
+        GIVEN("2 equal static_arrays a and b")
+        {
+            auto a = create_sut(1, 3, 5, 7, 9);
+            auto b = create_sut(1, 3, 5, 7, 9);
 
-        custom_data_generator gen;
-        csb::static_array<custom, 3> c(gen());
-        copyable(c,
-                 [&](auto &array) { array.front() = gen(); },
-                 "modify front of custom array");
+            WHEN("move constructing a third array c from b")
+            {
+                decltype(a) c(std::move(b));
+                THEN("c == a") { REQUIRE(c == a); }
+            }
+
+            WHEN("move assigning to a third array c from b")
+            {
+                decltype(a) c = create_sut(5, 6, 7, 8, 9);
+
+                c = std::move(b);
+
+                THEN("c == a") { REQUIRE(c == a); }
+            }
+        }
     }
 
-    SCENARIO("moveable")
-    {
-        csb::static_array<int, 1> i{1};
-        csb::static_array<int, 1> expected{1};
-        moveable(i, expected);
-
-        expected.front() = i.front() = 42;
-        moveable(i, expected);
-
-        csb::static_array<custom, 2> c;
-        csb::static_array<custom, 2> cexpected;
-        moveable(c, cexpected);
-
-        cexpected[1] = c[1] = custom(42);
-        moveable(c, cexpected);
-    }
-
-    using namespace csb;
-    SCENARIO("Range init")
+    SCENARIO("static_array Range init")
     {
         GIVEN("A Range of elements a, b, c")
         {
-            auto gen = data_generator();
-            auto a = gen();
-            auto b = gen();
-            auto c = gen();
-            decltype(gen()) abc[] = {a, b, c};
+            auto a = 1;
+            auto b = 2;
+            auto c = 3;
+            int abc[] = {a, b, c};
 
             WHEN("Initializing a static_array of size 3")
             {
-                auto sut = create_sut<3>(abc);
+                static_array<int, 3> sut(abc);
+
                 THEN("Array has element a, b and c in order")
                 {
                     REQUIRE(sut[0] == a);
@@ -176,7 +230,7 @@ namespace test
             }
             WHEN("Initializing a static_array of size 2")
             {
-                auto sut = create_sut<2>(abc);
+                static_array<int, 2> sut(abc);
                 THEN("Array has element a, b in order")
                 {
                     REQUIRE(sut[0] == a);
@@ -185,7 +239,7 @@ namespace test
             }
             WHEN("Initializing a static_array of size 4")
             {
-                auto sut = create_sut<4>(abc);
+                static_array<int, 4> sut(abc);
                 THEN("Array has element a, b and c in order")
                 {
                     REQUIRE(sut[0] == a);
@@ -196,21 +250,21 @@ namespace test
         }
     }
 
-    SCENARIO("operator[]")
+    SCENARIO("static_array operator[]")
     {
         constexpr csb::static_array<int, 3> arr{1, 2, 3};
         constexpr int a = arr[1];
         static_assert(a == 2, "grr");
     }
 
-    SCENARIO("at")
+    SCENARIO("statuc_array::at")
     {
         constexpr csb::static_array<int, 3> arr{1, 2, 3};
         constexpr int a = arr.at(1);
         static_assert(a == 2, "grr");
     }
 
-    SCENARIO("fill ctor")
+    SCENARIO("static_array fill ctor")
     {
         GIVEN("a static_array of size 3")
         {
@@ -228,4 +282,4 @@ namespace test
             }
         }
     }
-} // namespace test
+} // namespace csb::test
