@@ -1,136 +1,86 @@
 #include "singly_linked_list.hpp"
 
-#include <core/is_regular_test.hpp>
-#include <core/test_util.hpp>
-
 #include <catch/catch.hpp>
 
-#include <iostream>
 #include <random>
 #include <type_traits>
 #include <vector>
 
-namespace test
+namespace csb::test
 {
 
     namespace
     {
-        struct int_generator
+        template <typename... Args> auto create_sut(Args &&... args)
         {
-            using sut_t = csb::singly_linked_list<int>;
-            using data_t = int;
-
-            sut_t create_sut() const { return {}; }
-            int_data_generator data_source() const { return {}; }
-        };
-
-        struct custom_generator
-        {
-            using sut_t = csb::singly_linked_list<custom>;
-            using data_t = custom;
-
-            sut_t create_sut() const { return {}; }
-            custom_data_generator data_source() const { return {}; }
-        };
+            using common_t = std::common_type_t<Args...>;
+            auto sut = singly_linked_list<common_t>();
+            sut.append(std::vector{std::forward<Args>(args)...});
+            return sut;
+        }
     } // namespace
 
-    template <> struct arg_printer<csb::singly_linked_list<int>>
+    SCENARIO("singly_linked_list::push_front")
     {
-        static std::ostream &print(std::ostream &os,
-                                   csb::singly_linked_list<int> const &li)
+        GIVEN("a list of size s")
         {
-            os << "[";
-            for (auto const &i : li)
-            {
-                os << i << ",";
-            }
-            os << (li.is_empty() ? "]" : "\b]");
-            return os;
-        }
-    };
-
-    template <> struct arg_printer<csb::singly_linked_list<custom>>
-    {
-        static std::ostream &print(std::ostream &os,
-                                   csb::singly_linked_list<custom> const &lc)
-        {
-            os << "singly_linked_list<custom>[";
-            for (auto const &c : lc)
-            {
-                os << c.i << ",";
-            }
-            os << (lc.is_empty() ? "]" : "\b]");
-            return os;
-        }
-    };
-
-    template <SutGenerator G> auto push_front(G const &generator)
-    {
-        GIVEN_T("list of size s", G)
-        {
-            auto sut = generator.create_sut();
-            auto gen = generator.data_source();
-            data_t<G> order[] = {gen(), gen(), gen()};
-
+            int const order[] = {1, 2, 3, 4};
+            auto sut = singly_linked_list<int>();
             sut.append(order);
 
-            auto s = sut.size();
+            auto const s = sut.size();
 
-            WHEN("pushing new element on front")
+            WHEN("pushing a new element on the front")
             {
-                auto first = gen();
-                auto return_v = sut.push_front(first);
+                auto const v = 9;
+
+                auto const ret = sut.push_front(v);
 
                 THEN("size == s + 1") { REQUIRE(sut.size() == s + 1); }
 
-                THEN("returned iterator points to new element")
+                THEN("ret is an iterator pointing to the new element")
                 {
-                    REQUIRE(*return_v == first);
+                    REQUIRE(*ret == v);
                 }
 
-                THEN("begin points to new element")
+                THEN("begin points to the new element")
                 {
-                    REQUIRE(sut.begin() == return_v);
+                    REQUIRE(sut.begin() == ret);
                 }
 
-                THEN("relative order of other elements is unchanged")
+                THEN("order of following elements is unchanged")
                 {
                     auto it = sut.begin();
-                    REQUIRE(*++it == order[0]);
-                    REQUIRE(*++it == order[1]);
-                    REQUIRE(*++it == order[2]);
+                    for (auto const &o : order)
+                    {
+                        REQUIRE(*++it == o);
+                    }
                 }
             }
         }
     }
 
-    template <SutGenerator G> auto push_back(G g)
+    SCENARIO("singly_linked_list::push_back")
     {
-        GIVEN_T("list of size s", G)
+        GIVEN("a list of size s")
         {
-            auto sut = g.create_sut();
-            auto generator = g.data_source();
-            auto v1 = generator();
-            auto v2 = generator();
-            auto v3 = generator();
+            int const order[] = {1, 2, 3, 4};
+            auto sut = singly_linked_list<int>();
+            sut.append(order);
 
-            sut.push_back(v1);
-            sut.push_back(v2);
-            sut.push_back(v3);
+            auto const s = sut.size();
 
-            auto s = sut.size();
-
-            WHEN("pushing new element on back")
+            WHEN("pushing a new element on the back")
             {
-                auto test_v = generator();
-                auto return_v = sut.push_back(test_v);
+                auto const v = 9;
+
+                auto ret = sut.push_back(v);
 
                 THEN("size == s + 1") { REQUIRE(sut.size() == s + 1); }
 
-                THEN("returned iterator points to new element")
+                THEN("ret is an iterator pointing to the new element")
                 {
-                    REQUIRE(return_v != sut.end());
-                    REQUIRE(*return_v == test_v);
+                    REQUIRE(*ret == v);
                 }
 
                 THEN("last element before tail points to new element")
@@ -140,26 +90,27 @@ namespace test
                     while (++forward != sut.end())
                         trailing = forward;
 
-                    REQUIRE(trailing == return_v);
-                    REQUIRE(++return_v == sut.end());
+                    REQUIRE(trailing == ret);
+                    REQUIRE(++ret == sut.end());
                 }
-                THEN("relative order of other elements is unchanged")
+
+                THEN("order of following elements is unchanged")
                 {
                     auto it = sut.begin();
-                    REQUIRE(*it++ == v1);
-                    REQUIRE(*it++ == v2);
-                    REQUIRE(*it++ == v3);
-                    REQUIRE(*it++ == test_v);
+                    for (auto const &o : order)
+                    {
+                        REQUIRE(*it++ == o);
+                    }
                 }
             }
         }
-        GIVEN_T("an empty list", G)
+        GIVEN("an empty list")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
+            auto sut = singly_linked_list<int>();
+
             WHEN("calling push_back")
             {
-                auto v = gen();
+                auto const v = 42;
                 sut.push_back(v);
 
                 THEN("list contains 1 element") { REQUIRE(sut.size() == 1); }
@@ -171,24 +122,22 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto iteration(G g)
+    SCENARIO("singly_linked_list::iteration")
     {
-        GIVEN_T("empty list", G)
+        GIVEN("empty list")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<int>();
 
             THEN("begin == end") { REQUIRE(sut.begin() == sut.end()); }
 
             WHEN("x elements are added")
             {
-                auto generator = g.data_source();
-                data_t<G> vs[] = {generator(), generator(), generator()};
+                int const vs[] = {5, 2, 7};
 
                 for (auto v : vs)
                 {
                     sut.push_back(v);
                 }
-                auto x = sut.size();
 
                 THEN("range begin -> end contains all added elements")
                 {
@@ -211,23 +160,19 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto insert(G g)
+    SCENARIO("singly_linked_list::insert")
     {
-        GIVEN_T("list with n elements in", G)
+        GIVEN("list with n elements in")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> input[] = {gen(), gen(), gen()};
+            auto sut = create_sut(1, 2, 3);
 
-            const auto n = 3;
-
-            sut.append(input);
+            auto const n = 3;
 
             WHEN("giving insert begin")
             {
-                auto new_element = gen();
+                auto new_element = 4;
                 auto ret_pos = sut.insert(sut.begin(), new_element);
-                THEN("new element is at fron of list")
+                THEN("new element is at front of list")
                 {
                     REQUIRE(*sut.begin() == new_element);
                 }
@@ -239,7 +184,7 @@ namespace test
             }
             WHEN("giving insert end")
             {
-                auto new_element = gen();
+                auto new_element = -5;
                 auto ret_pos = sut.insert(sut.end(), new_element);
                 THEN("new element is last in list")
                 {
@@ -255,7 +200,7 @@ namespace test
             }
             WHEN("inserting at neither begin or end")
             {
-                auto new_element = gen();
+                auto new_element = 42;
                 auto pos_in = ++sut.begin();
                 auto ret_pos = sut.insert(pos_in, new_element);
                 THEN("new element is before the position passed in")
@@ -271,15 +216,15 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto append(G g)
+    SCENARIO("singly_linked_list::append")
     {
-        GIVEN_T("i have an empty list", G)
+        GIVEN("an empty list")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<std::string>();
+
             WHEN("I append a range of n values")
             {
-                auto gen = g.data_source();
-                data_t<G> input[] = {gen(), gen(), gen()};
+                std::string const input[] = {"one", "two", "three"};
 
                 const auto n = 3;
                 sut.append(input);
@@ -298,7 +243,7 @@ namespace test
             }
             WHEN("i append an empy range")
             {
-                std::vector<data_t<G>> empty;
+                std::vector<std::string> empty;
                 sut.append(empty);
                 THEN("list still empty")
                 {
@@ -308,11 +253,10 @@ namespace test
                 }
             }
         }
-        GIVEN_T("a non empty list", G)
+        GIVEN("a non empty list")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> prior[] = {gen(), gen(), gen()};
+            auto sut = singly_linked_list<double>();
+            double prior[] = {3.14, 2.67, -6.66};
 
             for (auto e : prior)
             {
@@ -321,7 +265,7 @@ namespace test
 
             WHEN("appending n more elements")
             {
-                data_t<G> appended[] = {gen(), gen(), gen()};
+                double appended[] = {1.11, 10.0, 5};
                 const auto n = 3;
                 const auto prev_size = sut.size();
 
@@ -346,20 +290,19 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto insert_after(G g)
+    SCENARIO("singly_linked_list::insert_after")
     {
-        GIVEN_T("a list containing 2 elements", G)
+        GIVEN("a list containing 2 elements")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            auto first = gen();
-            auto second = gen();
+            auto sut = singly_linked_list<char>();
+            auto first = 'a';
+            auto second = 'Z';
             auto list = {first, second};
             sut.append(list);
 
             WHEN("inserting after begin")
             {
-                auto target = gen();
+                auto target = 't';
                 auto ret = sut.insert_after(sut.begin(), target);
                 THEN("the new element is at position ++beign")
                 {
@@ -380,33 +323,15 @@ namespace test
                 }
                 THEN("size will be 3") { REQUIRE(sut.size() == 3); }
             }
-            WHEN("inserting at end")
-            {
-                THEN("crash")
-                {
-                    // how to test??
-                }
-            }
-        }
-        GIVEN_T("an empty list", G)
-        {
-            WHEN("inserting after begin")
-            {
-                THEN("crash")
-                {
-                    // test??
-                }
-            }
         }
     }
 
-    template <SutGenerator G> auto pop_front(G g)
+    SCENARIO("singly_linked_list::pop_front")
     {
-        GIVEN_T("a list with n elements in", G)
+        GIVEN("a list with n elements in")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> data[] = {gen(), gen(), gen()};
+            auto sut = singly_linked_list<int>();
+            int const data[] = {1, 4, 6, 9};
 
             sut.append(data);
             const auto n = sut.size();
@@ -422,9 +347,10 @@ namespace test
                 }
             }
         }
-        GIVEN_T("an empty list", G)
+        GIVEN("an empty list")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<int>();
+
             WHEN("popping front")
             {
                 sut.pop_front();
@@ -438,13 +364,12 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto pop_back(G g)
+    SCENARIO("singly_linked_list::pop_back")
     {
-        GIVEN_T("a list with n elements in", G)
+        GIVEN("a list with n elements in")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> data[] = {gen(), gen(), gen(), gen()};
+            auto sut = singly_linked_list<int>();
+            int const data[] = {1, 4, 6, 9};
 
             sut.append(data);
             const auto n = sut.size();
@@ -460,9 +385,9 @@ namespace test
                 }
             }
         }
-        GIVEN_T("an empty list", G)
+        GIVEN("an empty list")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<int>();
             WHEN("popping back")
             {
                 sut.pop_back();
@@ -476,13 +401,12 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto erase(G g)
+    SCENARIO("singly_linked_list::erase")
     {
-        GIVEN_T("a list with n elements in", G)
+        GIVEN("a list with n elements in")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> data[] = {gen(), gen(), gen(), gen()};
+            auto sut = singly_linked_list<int>();
+            int const data[] = {1, 4, 6, 9};
 
             sut.append(data);
             const auto n = sut.size();
@@ -538,9 +462,10 @@ namespace test
                 }
             }
         }
-        GIVEN_T("an empty list", G)
+        GIVEN("an empty list")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<int>();
+
             WHEN("erasing begin")
             {
                 sut.erase(sut.begin());
@@ -554,13 +479,13 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto reverse(G g)
+    SCENARIO("singly_linked_list::reverse")
     {
-        GIVEN_T("a list of several values", G)
+        GIVEN("a list of several values")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> in[] = {gen(), gen(), gen()};
+            auto sut = singly_linked_list<int>();
+            int const in[] = {1, 4, 6, 9};
+
             sut.append(in);
 
             WHEN("reversing the list")
@@ -569,21 +494,18 @@ namespace test
 
                 THEN("the list contains the same elements but in reverse order")
                 {
-                    auto revd = sut.begin();
-                    auto rin = std::rbegin(in);
-                    REQUIRE(sut.size() == 3);
-                    for (; revd != sut.end(); ++revd, ++rin)
-                    {
-                        REQUIRE(*revd == *rin);
-                    }
+                    std::vector<int> v(sut.begin(), sut.end());
+                    std::vector reversed{9, 6, 4, 1};
+
+                    REQUIRE_THAT(
+                        v, Catch::Matchers::Vector::EqualsMatcher(reversed));
                 }
             }
         }
-        GIVEN_T("a list of containing 1 value", G)
+        GIVEN("a list of containing 1 value")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            auto in = gen();
+            auto sut = singly_linked_list<int>();
+            auto in = 1;
             sut.push_back(in);
 
             WHEN("calling reverse on the list")
@@ -598,9 +520,9 @@ namespace test
                 }
             }
         }
-        GIVEN_T("empty range", G)
+        GIVEN("empty range")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<int>();
             WHEN("attempting to reverse the list")
             {
                 sut.reverse();
@@ -613,50 +535,90 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto equality(G g)
+    SCENARIO("singly_linked_list::equality")
     {
-        // empty list is reflexive and equla to itself and transitive
-        auto empty = g.create_sut();
-        equality_reflexive(empty);
-        auto also_empty = g.create_sut();
-        equality_symetric(empty, also_empty);
-        auto empty_as_well = g.create_sut();
-        equality_transitive(empty, empty_as_well, also_empty);
 
-        // two lists with the same number of elements in the same sequence
-        auto not_empty = g.create_sut();
-        auto also_not_empty = g.create_sut();
-        auto not_empty_as_well = g.create_sut();
-        auto gen = g.data_source();
-        data_t<G> in[] = {gen(), gen(), gen()};
+        // reflexive
+        GIVEN("a list a")
+        {
+            auto a = singly_linked_list<int>();
 
-        not_empty.append(in);
-        also_not_empty.append(in);
-        not_empty_as_well.append(in);
+            THEN("a == a") { REQUIRE(a == a); }
+
+            a.append(std::vector{1, 2, 3});
+
+            THEN("a == a") { REQUIRE(a == a); }
+        }
+
+        // symmetric
+        GIVEN("2 lists a and b")
+        {
+            auto a = singly_linked_list<int>();
+            auto b = singly_linked_list<int>();
+
+            WHEN("a == b")
+            {
+                REQUIRE(a == b);
+                THEN("b == a") { REQUIRE(b == a); }
+
+                a.append(std::vector{1, 2, 3});
+                b.append(std::vector{1, 2, 3});
+
+                REQUIRE(a == b);
+                THEN("b == a") { REQUIRE(b == a); }
+            }
+        }
+
+        // transitive
+        GIVEN("3 lists a, b and c")
+        {
+            auto a = singly_linked_list<int>();
+            auto b = singly_linked_list<int>();
+            auto c = singly_linked_list<int>();
+
+            WHEN("a == b and b == c")
+            {
+                REQUIRE(a == b);
+                REQUIRE(b == c);
+                THEN("a == c") { REQUIRE(a == c); }
+
+                a.append(std::vector{1, 2, 3});
+                b.append(std::vector{1, 2, 3});
+                c.append(std::vector{1, 2, 3});
+
+                REQUIRE(a == b);
+                REQUIRE(b == c);
+                THEN("a == c") { REQUIRE(a == c); }
+            }
+        }
 
         // differnt sizes are !=
-        GIVEN_T("two lists of different sizes", G)
+        GIVEN("two lists of different sizes")
         {
-            auto a = g.create_sut();
-            auto b = g.create_sut();
+            auto a = singly_linked_list<int>();
+            auto b = singly_linked_list<int>();
 
-            auto v = gen();
+            auto v = 1;
             a.push_back(v);
             a.push_back(v);
             b.push_back(v);
-            THEN("they are not equal") { REQUIRE(a != b); }
+
+            THEN("they are not equal")
+            {
+                REQUIRE(a != b);
+                REQUIRE_FALSE(a == b);
+            }
         }
 
         // different values are !=
         // different orders are !=
-        GIVEN_T("two lists with the same size", G)
+        GIVEN("two lists with the same size")
         {
-            auto a = g.create_sut();
-            auto b = g.create_sut();
+            auto a = singly_linked_list<int>();
+            auto b = singly_linked_list<int>();
 
-            auto gen = g.data_source();
-            auto v1 = gen();
-            auto v2 = gen();
+            auto v1 = 1;
+            auto v2 = 2;
 
             WHEN("the values contained are different")
             {
@@ -675,15 +637,14 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto merge(G g)
+    SCENARIO("singly_linked_list::merge")
     {
-        GIVEN_T("two non-empty sorted list", G)
+        GIVEN("two non-empty sorted lists")
         {
-            auto a = g.create_sut();
-            auto b = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> in[] = {
-                gen(), gen(), gen(), gen(), gen(), gen(), gen(), gen()};
+            auto a = singly_linked_list<int>();
+            auto b = singly_linked_list<int>();
+
+            int in[] = {1, 2, 4, 6, 8, 10};
 
             std::random_device rd;
             std::mt19937 randg(rd());
@@ -712,7 +673,7 @@ namespace test
                 {
                     std::sort(std::begin(in), std::end(in));
 
-                    auto merged = g.create_sut();
+                    auto merged = singly_linked_list<int>();
                     merged.append(in);
                     REQUIRE(a == merged);
                 }
@@ -725,21 +686,19 @@ namespace test
                 {
                     std::sort(std::begin(in), std::end(in));
 
-                    auto merged = g.create_sut();
+                    auto merged = singly_linked_list<int>();
                     merged.append(in);
                     REQUIRE(b == merged);
                 }
             }
         }
-        GIVEN_T("two lists. one empty, one not", G)
+        GIVEN("two lists. one empty, one not")
         {
-            auto non_empty = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> in[] = {gen(), gen(), gen()};
+            auto non_empty = singly_linked_list<int>();
+            int const in[] = {3, 2, 6, 7};
             non_empty.append(in);
 
-            auto empty = g.create_sut();
-
+            auto empty = singly_linked_list<int>();
             WHEN("merging the empty into the non-empty")
             {
                 auto cpy = non_empty;
@@ -760,10 +719,10 @@ namespace test
                 }
             }
         }
-        GIVEN_T("two empty lists a and b", G)
+        GIVEN("two empty lists a and b")
         {
-            auto a = g.create_sut();
-            auto b = g.create_sut();
+            auto a = singly_linked_list<int>();
+            auto b = singly_linked_list<int>();
 
             WHEN("merging a into b")
             {
@@ -778,18 +737,18 @@ namespace test
         }
     }
 
-    template <SutGenerator G> auto apply_in_reverse(G g)
+    SCENARIO("singly_linked_list::apply_in_reverse")
     {
-        GIVEN_T("a list of values", G)
+        GIVEN("a list of values")
         {
-            auto sut = g.create_sut();
-            auto gen = g.data_source();
-            data_t<G> in[] = {gen(), gen(), gen()};
+            auto sut = singly_linked_list<std::string>();
+            std::string in[] = {"one", "two", "three"};
+
             sut.append(in);
 
             WHEN("calling apply_inverse from begin->end")
             {
-                std::vector<data_t<G>> sequence;
+                std::vector<std::string> sequence;
                 apply_in_reverse(sut.begin(), sut.end(), [&](auto elem) {
                     sequence.push_back(elem);
                 });
@@ -803,9 +762,9 @@ namespace test
                 }
             }
         }
-        GIVEN_T("empty range", G)
+        GIVEN("empty range")
         {
-            auto sut = g.create_sut();
+            auto sut = singly_linked_list<std::string>();
             bool called = false;
             apply_in_reverse(
                 sut.begin(), sut.end(), [&](auto) { called = true; });
@@ -814,124 +773,73 @@ namespace test
         }
     }
 
-    SCENARIO("apply_in_reverse")
+    SCENARIO("singly_linked_list::copyable")
     {
-        apply_in_reverse(int_generator());
-        apply_in_reverse(custom_generator());
+        GIVEN("a list a")
+        {
+            auto a = create_sut(1, 2, 3, 4, 5);
+            WHEN("copy constructing b from a")
+            {
+                decltype(a) b(a);
+
+                THEN("a == b") { REQUIRE(a == b); }
+
+                WHEN("altering b")
+                {
+                    ++(*b.begin());
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+
+                WHEN("altering a")
+                {
+                    ++(*a.begin());
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+            }
+
+            WHEN("copy assigning a to b")
+            {
+                auto b = create_sut(9, 8, 7, 6, 5);
+                b = a;
+
+                THEN("a == b") { REQUIRE(a == b); }
+
+                WHEN("altering b")
+                {
+                    ++(*b.begin());
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+
+                WHEN("altering a")
+                {
+                    ++(*a.begin());
+                    THEN("a != b") { REQUIRE(a != b); }
+                }
+            }
+        }
     }
 
-    SCENARIO("singly linked list push_front")
+    SCENARIO("singly_linked_list::moveable")
     {
-        push_front(int_generator());
-        push_front(custom_generator());
+        GIVEN("2 equal lists a and b")
+        {
+            auto a = create_sut(1, 3, 5, 7, 9);
+            auto b = create_sut(1, 3, 5, 7, 9);
+
+            WHEN("move constructing a third list c from b")
+            {
+                decltype(a) c(std::move(b));
+                THEN("c == a") { REQUIRE(c == a); }
+            }
+
+            WHEN("move assigning to a third list c from b")
+            {
+                decltype(a) c = create_sut(5, 6, 7, 8, 9);
+
+                c = std::move(b);
+
+                THEN("c == a") { REQUIRE(c == a); }
+            }
+        }
     }
-
-    SCENARIO("push back")
-    {
-        push_back(int_generator());
-        push_back(custom_generator());
-    }
-
-    SCENARIO("iteration")
-    {
-        iteration(int_generator());
-        iteration(custom_generator());
-    }
-
-    SCENARIO("insert")
-    {
-        insert(int_generator());
-        insert(custom_generator());
-    }
-
-    SCENARIO("append")
-    {
-        append(int_generator());
-        append(custom_generator());
-    }
-
-    SCENARIO("insert after")
-    {
-        insert_after(int_generator());
-        insert_after(custom_generator());
-    }
-
-    SCENARIO("pop_front")
-    {
-        pop_front(int_generator());
-        pop_front(custom_generator());
-    }
-
-    SCENARIO("pop_back")
-    {
-        pop_back(int_generator());
-        pop_back(custom_generator());
-    }
-
-    SCENARIO("erase")
-    {
-        erase(int_generator());
-        erase(custom_generator());
-    }
-
-    SCENARIO("reverse list")
-    {
-        reverse(int_generator());
-        reverse(custom_generator());
-    }
-
-    SCENARIO("linked list equality")
-    {
-        equality(int_generator());
-        equality(custom_generator());
-    }
-
-    SCENARIO("linked list copyable")
-    {
-        csb::singly_linked_list<int> i;
-        copyable(i,
-                 [](auto &list) { list.push_back(2); },
-                 "append to empty (singly_linked_list<int>)");
-        i.push_back(12);
-        copyable(i,
-                 [](auto &list) { *list.begin() = 42; },
-                 "modify single element (singly_linked_list<int>)");
-
-        csb::singly_linked_list<custom> c;
-        copyable(c,
-                 [](auto &list) { list.push_back(custom(2)); },
-                 "append to empty (singly_linked_list<custom>)");
-        c.push_back(custom(12));
-        copyable(c,
-                 [](auto &list) { *list.begin() = custom(42); },
-                 "modify single element (singly_linked_list<custom>)");
-    }
-
-    SCENARIO("linked list moveable")
-    {
-        csb::singly_linked_list<int> i;
-        csb::singly_linked_list<int> expected;
-        moveable(i, expected);
-
-        i.push_back(42);
-        expected.push_back(42);
-        moveable(i, expected);
-
-        csb::singly_linked_list<custom> c;
-        csb::singly_linked_list<custom> cexpected;
-        moveable(c, cexpected);
-
-        c.push_back(custom(42));
-        cexpected.push_back(custom(42));
-        moveable(c, cexpected);
-
-        int arr[] = {1, 2, 3};
-        auto s = std::begin(arr);
-    }
-
-    SCENARIO("merging 2 sorted linked lists")
-    {
-        merge(int_generator());
-        merge(custom_generator());
-    }
-} // namespace test
+} // namespace csb::test

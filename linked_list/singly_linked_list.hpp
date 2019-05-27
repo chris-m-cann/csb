@@ -214,6 +214,12 @@ namespace csb
             return *this;
         }
 
+        template <typename R, typename = std::enable_if_t<csb::is_range_v<R>>>
+        explicit singly_linked_list(R &&range) : singly_linked_list()
+        {
+            append(std::forward<R>(range));
+        }
+
         singly_linked_list &operator=(singly_linked_list &&) noexcept = default;
 
         constexpr bool is_empty() const noexcept { return _size == 0; }
