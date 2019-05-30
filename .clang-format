@@ -1,4 +1,6 @@
 ---
+---
+Language: Cpp
 BinPackArguments: 'false'
 BinPackParameters: 'true'
 BreakBeforeBinaryOperators: None
@@ -8,7 +10,4 @@ ColumnLimit: '80'
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
 ConstructorInitializerIndentWidth: '6'
 IndentWidth: '4'
-Language: Cpp
 NamespaceIndentation: All
-
-...

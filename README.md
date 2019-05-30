@@ -1,8 +1,8 @@
-#csb
+# csb
 
 A reo I set to help me learn some basic data structures and algorithms.
 
-    ## #Done so far
+### Done so far
 
-    - [static_array](/ static_array / StaticArray.md) -
-    [singly_linked_list](/ linked_list / LinkedLists.md)
+- [static_array](/static_array/StaticArray.md)
+- [singly_linked_list](/linked_list/LinkedLists.md)
