@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <experimental/type_traits>
+#include <iterator>
 #include <type_traits>
 #include <utility>
 
@@ -137,6 +138,11 @@ namespace csb
         std::bool_constant<
             is_sentinel_v<std::experimental::detected_t<impl::end_t, T>,
                           std::experimental::detected_t<impl::begin_t, T>>>>;
+
+    template <typename Iter>
+    constexpr bool is_bidirectional_v = std::is_convertible_v<
+        typename std::iterator_traits<Iter>::iterator_category,
+        std::bidirectional_iterator_tag>;
 
     template <typename T>
     constexpr bool is_totally_ordered_v =

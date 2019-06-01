@@ -5,7 +5,7 @@ add_executable(csbexe
         main.cpp
         static_array/static_array.test.cpp
         linked_list/singly_linked_list.test.cpp
-        binary_tree/binary_tree.test.cpp)
+        binary_tree/binary_tree.test.cpp reverse/reverse.test.cpp)
 
 target_compile_options(csbexe PUBLIC -g2 -Wall -Wextra -Werror -fsanitize=address)
 

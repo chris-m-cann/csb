@@ -7,3 +7,4 @@ A reo I set to help me learn some basic data structures and algorithms.
 - [static_array](/static_array/StaticArray.md)
 - [singly_linked_list](/linked_list/LinkedLists.md)
 - [binary_tree](/binary_tree/BinaryTree.md)
+- [reverse](/reverse/Reverse.md)
