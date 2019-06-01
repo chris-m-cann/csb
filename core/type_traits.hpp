@@ -81,7 +81,11 @@ namespace csb
                                std::decay_t<T>,
                                std::experimental::detected_t<make_end_t, T>>;
 
+        template <typename T>
+        using less_than = decltype(std::declval<T>() < std::declval<T>());
+
     } // namespace impl
+
     template <typename T, typename V = T>
     constexpr bool is_equality_comparable_v =
         std::experimental::is_detected_convertible_v<bool, impl::equality_t, T,
@@ -134,6 +138,14 @@ namespace csb
             is_sentinel_v<std::experimental::detected_t<impl::end_t, T>,
                           std::experimental::detected_t<impl::begin_t, T>>>>;
 
+    template <typename T>
+    constexpr bool is_totally_ordered_v =
+        std::experimental::is_detected_v<impl::less_than, T>;
+
+    template <typename Base, typename Derived>
+    constexpr bool is_same_or_derived_v =
+        std::is_base_of_v<Base, std::remove_reference_t<Derived>>;
+
     //
     //
     //    template <typename T> struct function_traits;
@@ -174,6 +186,9 @@ namespace csb
     //        return requires(std::ostream & os, T t){{os << t}->std::ostream &
     //        };
     //    }
+
+    template <typename T> struct undefined_type;
+    template <auto V> struct undefined_value;
 } // namespace csb
 
 #endif // CSB_TYPE_TRAITS_HPP

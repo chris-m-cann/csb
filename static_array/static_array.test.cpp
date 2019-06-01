@@ -1,7 +1,7 @@
 #include <cstddef>
 #include <utility>
 
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 
 #include "static_array.hpp"
 #include <core/type_traits.hpp>
