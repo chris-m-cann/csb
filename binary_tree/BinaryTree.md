@@ -44,3 +44,64 @@ there are a bunch of ways to traverse tree. including:
     - then copy child to node then delete chile
  - node has 2 children
     - then need to contains the inorder successor node the end of the left subtree and copy value over before deleting the successor node
+    
+    
+           
+### Tree rotations
+
+for terminologies sakes, node Z has parent P who's parent is Z's grandparent G 
+
+##### left rotate 
+ - take a reference, tmp, to G's right child
+ - makes G's right child, tmp's left child
+ - make tmp's left child be G
+ - use tmp as the new Grandparent
+ 
+```c++
+    node* leftRotate(node *G) {
+    auto tmp = G->right;
+    G->right = tmp->left;
+    tmp->left = G
+    return tmp
+    }
+```
+##### right rotate
+
+ - take a reference, tmp, to G's left child
+ - makes G's left child, tmp's right child
+ - make tmp's right child be G
+ - use tmp as the new Grandparent
+ 
+```c++
+    node* rightRotate(node *G) {
+    auto tmp = G->left;
+    G->left = tmp->right;
+    tmp->right = G
+    return tmp
+    }
+```
+
+##### left right rotate
+
+ - left rotate around P
+ - right rotate around G
+ 
+```c++
+    node* leftRightRotate(node *G) {
+        auto newG = leftRotate(G->left);
+        return rightRotate(newG);
+    }
+```
+
+
+##### right left rotate
+
+ - right rotate around P
+ - left rotate around G
+ 
+```c++
+    node* rightLeftRotate(node *G) {
+        auto newG = rightRotate(G->left);
+        return leftRotate(newG);
+    }
+```
