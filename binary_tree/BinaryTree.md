@@ -58,7 +58,7 @@ for terminologies sakes, node Z has parent P who's parent is Z's grandparent G
  - use tmp as the new Grandparent
  
 ```c++
-    node* leftRotate(node *G) {
+    node* left_rotate(node *G) {
     auto tmp = G->right;
     G->right = tmp->left;
     tmp->left = G
@@ -73,7 +73,7 @@ for terminologies sakes, node Z has parent P who's parent is Z's grandparent G
  - use tmp as the new Grandparent
  
 ```c++
-    node* rightRotate(node *G) {
+    node* right_rotate(node *G) {
     auto tmp = G->left;
     G->left = tmp->right;
     tmp->right = G
@@ -87,9 +87,9 @@ for terminologies sakes, node Z has parent P who's parent is Z's grandparent G
  - right rotate around G
  
 ```c++
-    node* leftRightRotate(node *G) {
-        auto newG = leftRotate(G->left);
-        return rightRotate(newG);
+    node* left_right_rotate(node *G) {
+        auto newG = left_rotate(G->left);
+        return right_rotate(newG);
     }
 ```
 
@@ -100,8 +100,8 @@ for terminologies sakes, node Z has parent P who's parent is Z's grandparent G
  - left rotate around G
  
 ```c++
-    node* rightLeftRotate(node *G) {
-        auto newG = rightRotate(G->left);
-        return leftRotate(newG);
+    node* right_left_rotate(node *G) {
+        auto newG = right_rotate(G->left);
+        return left_rotate(newG);
     }
 ```

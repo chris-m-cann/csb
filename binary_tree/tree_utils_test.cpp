@@ -4,6 +4,11 @@
 
 namespace csb
 {
+    struct Unit
+    {
+    };
+    template <typename T> using tree_node = binary_tree_node<T, Unit>;
+
     SCENARIO("left rotate")
     {
         GIVEN("a right-heavy imbalanced tree")
@@ -36,7 +41,7 @@ namespace csb
 
                 THEN("a left rotation balances the tree")
                 {
-                    auto newG = leftRotate(std::move(g));
+                    auto newG = left_rotate(std::move(g));
 
                     /* balanced tree
                      *
@@ -80,7 +85,7 @@ namespace csb
 
                 THEN("a left rotation balances the tree")
                 {
-                    auto newG = leftRotate(std::move(g));
+                    auto newG = left_rotate(std::move(g));
 
                     /* balanced tree
                      *
@@ -133,7 +138,7 @@ namespace csb
 
                 THEN("a right rotation balances the tree")
                 {
-                    auto newG = rightRotate(std::move(g));
+                    auto newG = right_rotate(std::move(g));
 
                     /* balanced tree
                      *
@@ -177,7 +182,7 @@ namespace csb
 
                 THEN("a right rotation balances the tree")
                 {
-                    auto newG = rightRotate(std::move(g));
+                    auto newG = right_rotate(std::move(g));
 
                     /* balanced tree
                      *
@@ -229,7 +234,7 @@ namespace csb
 
             THEN("a left right rotate balances the tree")
             {
-                auto newG = leftRightRotate(std::move(g));
+                auto newG = left_right_rotate(std::move(g));
 
                 /*
                  *      7
@@ -279,7 +284,7 @@ namespace csb
 
             THEN("a left right rotate balances the tree")
             {
-                auto newG = leftRightRotate(std::move(g));
+                auto newG = left_right_rotate(std::move(g));
 
                 /*
                  *      7
@@ -328,7 +333,7 @@ namespace csb
 
             THEN("a right left rotate balances the tree")
             {
-                auto newG = rightLeftRotate(std::move(g));
+                auto newG = right_left_rotate(std::move(g));
 
                 /*
                  *       6
@@ -378,7 +383,7 @@ namespace csb
 
             THEN("a right left rotate balances the tree")
             {
-                auto newG = rightLeftRotate(std::move(g));
+                auto newG = right_left_rotate(std::move(g));
 
                 /*
                  *      7

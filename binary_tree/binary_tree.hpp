@@ -1,175 +1,50 @@
 #ifndef CSB_BINARY_TREE_HPP
 #define CSB_BINARY_TREE_HPP
 
+#include "tree_utils.hpp"
 #include <core/type_traits.hpp>
+
 #include <memory>
 #include <queue>
 #include <type_traits>
 
 namespace csb
 {
-    template <typename T> class binary_tree;
+    namespace impl
+    {
+        struct null_balancing_policy
+        {
+            using node_metadata_type = null_balancing_policy;
+
+            template <typename T>
+            using node_type = binary_tree_node<T, node_metadata_type>;
+
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            balance(std::unique_ptr<node_type<T>> root, node_type<T> *node)
+            {
+                (void)node;
+                return std::move(root);
+            }
+        };
+
+    } // namespace impl
+
+    template <typename T,
+              typename BalancingPolicy = impl::null_balancing_policy>
+    class binary_tree;
 
     namespace impl
     {
 
-        template <typename T> struct binary_tree_node
-        {
-
-            ~binary_tree_node() = default;
-
-            void add(std::unique_ptr<binary_tree_node> &v)
-            {
-                if (v->t <= t)
-                {
-                    if (left == nullptr)
-                    {
-                        left = std::move(v);
-                        left->parent = this;
-                    }
-                    else
-                    {
-                        left->add(v);
-                    }
-                }
-                else
-                {
-                    if (right == nullptr)
-                    {
-                        right = std::move(v);
-                        right->parent = this;
-                    }
-                    else
-                    {
-                        right->add(v);
-                    }
-                }
-            }
-
-            binary_tree_node *find(T const &target)
-            {
-                if (t == target)
-                {
-                    return this;
-                }
-
-                if (t < target)
-                {
-                    if (right == nullptr)
-                    {
-                        return nullptr;
-                    }
-                    else
-                    {
-                        return right->find(target);
-                    }
-                }
-                else
-                {
-                    if (left == nullptr)
-                    {
-                        return nullptr;
-                    }
-                    else
-                    {
-                        return left->find(target);
-                    }
-                }
-            }
-
-            binary_tree_node const *find(T const &target) const
-            {
-                return const_cast<binary_tree_node *>(this)->find(target);
-            }
-
-            template <typename Callable>
-            void inorder_traverse(Callable const &visiter) const
-            {
-                if (left != nullptr)
-                {
-                    left->inorder_traverse(visiter);
-                }
-
-                visiter(t);
-
-                if (right != nullptr)
-                {
-                    right->inorder_traverse(visiter);
-                }
-            }
-
-            template <typename Callable>
-            void preorder_traverse(Callable const &visiter) const
-            {
-
-                visiter(t);
-
-                if (left != nullptr)
-                {
-                    left->inorder_traverse(visiter);
-                }
-
-                if (right != nullptr)
-                {
-                    right->inorder_traverse(visiter);
-                }
-            }
-
-            template <typename Callable>
-            void postorder_traverse(Callable const &visiter) const
-            {
-                if (left != nullptr)
-                {
-                    left->inorder_traverse(visiter);
-                }
-
-                if (right != nullptr)
-                {
-                    right->inorder_traverse(visiter);
-                }
-
-                visiter(t);
-            }
-
-            T t;
-            std::unique_ptr<binary_tree_node> left = nullptr;
-            std::unique_ptr<binary_tree_node> right = nullptr;
-            binary_tree_node *parent = nullptr;
-
-            explicit binary_tree_node(T &&v, binary_tree_node *parent = nullptr)
-                  : t(std::move(v)),
-                    left(nullptr),
-                    right(nullptr),
-                    parent(parent)
-            {
-            }
-        };
-
-        template <typename T>
-        impl::binary_tree_node<T> *leftmost(impl::binary_tree_node<T> *n)
-        {
-            while (n && n->left)
-            {
-                n = n->left.get();
-            }
-            return n;
-        }
-
-        template <typename T>
-        impl::binary_tree_node<T> *rightmost(impl::binary_tree_node<T> *n)
-        {
-            while (n && n->right)
-            {
-                n = n->right.get();
-            }
-            return n;
-        }
-
-        template <typename T>
+        template <typename Node>
         class binary_tree_iterator
-              : public std::iterator<std::forward_iterator_tag, T>
+              : public std::iterator<std::forward_iterator_tag,
+                                     typename Node::value_type>
         {
           public:
+            using value_type = typename Node::value_type;
+
             binary_tree_iterator &operator++()
             {
 
@@ -204,7 +79,7 @@ namespace csb
                 return *this;
             }
 
-            binary_tree_iterator const operator++(int)
+            binary_tree_iterator operator++(int)
             {
                 auto cpy = *this;
                 ++(*this);
@@ -240,26 +115,27 @@ namespace csb
                 return *this;
             }
 
-            binary_tree_iterator const operator--(int)
+            binary_tree_iterator operator--(int)
             {
                 auto tmp = *this;
                 --(*this);
                 return tmp;
             }
 
-            T const &operator*() const { return np->t; }
+            value_type const &operator*() const { return np->t; }
+
+            Node const &node() const { return *np; }
 
           private:
-            explicit binary_tree_iterator(binary_tree_node<T> *p,
-                                          binary_tree_node<T> *root)
+            explicit binary_tree_iterator(Node *p, Node *root)
                   : np(p), root(root)
             {
             }
 
-            binary_tree_node<T> *np = nullptr;
-            binary_tree_node<T> *root = nullptr;
+            Node *np = nullptr;
+            Node *root = nullptr;
 
-            friend class binary_tree<T>;
+            template <typename T, typename BP> friend class binary_tree;
 
             friend bool operator==(binary_tree_iterator const &l,
                                    binary_tree_iterator const &r)
@@ -276,14 +152,16 @@ namespace csb
 
     } // namespace impl
 
-    template <typename T> class binary_tree
+    template <typename T, typename BalancingPolicy> class binary_tree
     {
       public:
         static_assert(is_totally_ordered_v<T>,
                       "T must support operator < in order for binary tree to "
                       "function properly");
 
-        using const_iterator = impl::binary_tree_iterator<T>;
+        using node_type =
+            binary_tree_node<T, typename BalancingPolicy::node_metadata_type>;
+        using const_iterator = impl::binary_tree_iterator<node_type>;
 
         binary_tree() = default;
         ~binary_tree() = default;
@@ -368,15 +246,17 @@ namespace csb
 
         void add(T t)
         {
-            auto n = std::make_unique<impl::binary_tree_node<T>>(std::move(t));
+            auto n = std::make_unique<node_type>(std::move(t));
+            auto tmp = n.get();
 
             if (root == nullptr)
             {
-                root = std::move(n);
+                root = BalancingPolicy::balance(std::move(n), tmp);
             }
             else
             {
                 root->add(n);
+                root = BalancingPolicy::balance(std::move(root), tmp);
             }
             ++_size;
         }
@@ -409,12 +289,19 @@ namespace csb
         template <typename Callable>
         void breadth_first_traverse(Callable const &visiter) const
         {
+            breadth_first_traverse_nodes(
+                [&visiter](node_type const &node) { visiter(node.t); });
+        }
+
+        template <typename Callable>
+        void breadth_first_traverse_nodes(Callable const &visiter) const
+        {
             if (root == nullptr)
             {
                 return;
             }
 
-            std::queue<impl::binary_tree_node<T> *> q;
+            std::queue<node_type *> q;
             q.push(root.get());
 
             while (!q.empty())
@@ -422,7 +309,7 @@ namespace csb
                 auto n = q.front();
                 q.pop();
 
-                visiter(n->t);
+                visiter(*n);
                 if (n->left != nullptr)
                 {
                     q.push(n->left.get());
@@ -440,7 +327,7 @@ namespace csb
 
         const_iterator begin() const
         {
-            return const_iterator(impl::leftmost(root.get()), root.get());
+            return const_iterator(leftmost(root.get()), root.get());
         }
 
         const_iterator end() const
@@ -449,8 +336,8 @@ namespace csb
         }
 
       private:
-        std::unique_ptr<impl::binary_tree_node<T>>
-        erase(std::unique_ptr<impl::binary_tree_node<T>> &parent, T const &t)
+        std::unique_ptr<node_type> erase(std::unique_ptr<node_type> &parent,
+                                         T const &t)
         {
             if (parent == nullptr)
             {
@@ -491,7 +378,7 @@ namespace csb
                 else
                 {
                     // both children
-                    auto next = impl::leftmost(parent->right.get());
+                    auto next = leftmost(parent->right.get());
                     parent->t = next->t;
                     parent->right = erase(parent->right, parent->t);
                 }
@@ -500,7 +387,7 @@ namespace csb
             return std::move(parent);
         }
 
-        std::unique_ptr<impl::binary_tree_node<T>> root = nullptr;
+        std::unique_ptr<node_type> root = nullptr;
         std::size_t _size = 0;
     };
 } // namespace csb
