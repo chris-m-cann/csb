@@ -105,6 +105,34 @@ namespace csb
             template <typename T>
             using node_type = binary_tree_node<T, red_black_node_meta_data>;
 
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            balance(std::unique_ptr<node_type<T>> root, node_type<T> *node)
+            {
+                auto newRoot = balance_impl(std::move(root), node);
+                newRoot->metadata().colour = Colour::Black;
+                return std::move(newRoot);
+            }
+
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            erase_node(std::unique_ptr<node_type<T>> root, node_type<T> &target)
+            {
+                // basically we ensure that the node to be deleted has at most
+                // one child
+                if (target.left != nullptr && target.right != nullptr)
+                {
+                    auto newTarget = leftmost(target.right.get());
+                    target.t = newTarget->t;
+                    return erase_node_impl(std::move(root), *newTarget);
+                }
+                else
+                {
+                    return erase_node_impl(std::move(root), target);
+                }
+            }
+
+          private:
             template <typename T> static bool is_black(node_type<T> *n)
             {
                 return n == nullptr || n->metadata().colour == Colour::Black;
@@ -201,13 +229,40 @@ namespace csb
                 return std::move(root);
             }
 
+            template <typename T, typename Metadata>
+            static std::unique_ptr<binary_tree_node<T, Metadata>>
+            fix_double_black(
+                std::unique_ptr<binary_tree_node<T, Metadata>> root,
+                binary_tree_node<T, Metadata> &target,
+                std::unique_ptr<binary_tree_node<T, Metadata>> child = nullptr)
+            {
+                // todo(chris) IMPLEMENT
+                return std::move(root);
+            }
+
             template <typename T>
             static std::unique_ptr<node_type<T>>
-            balance(std::unique_ptr<node_type<T>> root, node_type<T> *node)
+            erase_node_impl(std::unique_ptr<node_type<T>> root,
+                            node_type<T> &target)
             {
-                auto newRoot = balance_impl(std::move(root), node);
-                newRoot->metadata().colour = Colour::Black;
-                return std::move(newRoot);
+                auto child =
+                    target->left != nullptr ? target->left : target->right;
+
+                // if red then just delete
+                if (target.colour == Colour::Red)
+                {
+                    return detach(std::move(root), target, std::move(child));
+                }
+
+                // child is red, colour black and replace target with it
+                if (child != nullptr && child->colour == Colour::Red)
+                {
+                    child.colour = Colour::Black;
+                    return detach(std::move(root), target, std::move(child));
+                }
+
+                return fix_double_black(
+                    std::move(root), target, std::move(child));
             }
         };
     } // namespace impl

@@ -56,3 +56,40 @@ If we find an imbalance the we solve it in several ways:
             - recolour G and P
             - recurse on P   
  
+ 
+ #### Deletion 
+1. Find the node to be replaced through regular BST means
+2. if node to be deleted,v, has 2 non-null nodes then find it's in order successor, u, copy u's value (but not colour) to v and recursively call delete for u. From here on in we can assume v has at most 1 child
+3. if v is red just delete as this wont change the black height of the tree
+4. if v is black and has one red child, detach v and recolour the red child black
+5. if v has one child and it is black: detach v and label the child double black, run the fix algorithm on this node. If v has no children then it is basically the same as the case on one black child, the child is just null
+ 
+ Fixing algorithm: depending on the orientation and colours of the double black's family work through a series of cases, recursing until you reach a terminal case that leaves the tree balanced
+ 
+ double black scenarios:
+ 
+1. v's sibling (s) is black and at least one of s's children is red (r), then we do rotations based on the placements of s and r
+   1. Left Left case: s is in parent p's left subtree and red child r is in s's left subtree
+        1. right rotate about s
+        2. recolour r as black
+   2. Right Right: s is p's right child. r is s's right child
+        1. left rotate about s
+        2. recolour r as black
+   3. Left Right: s is p's left child. r is s's right child
+        1. right rotate about r
+        2. swap colours of s and r
+        3. follow Right Right steps with r playing the role of s and vice versa
+   4. Right Left: s is p's right child. r is s's left child
+        1. left rotate about r
+        2. swap colours of s and r
+        3. follow Left Left steps with r and s swapping roles
+2. s is black and both s's children are black
+   1. recolour s
+   2. if p is red then colour p as black and tree is balanced
+   3. else mark p as double black and recur with p playing the role of u/v
+3. s is red
+   1. flip the colours of p and s (so s always becomes black)
+   2. recur. rotating based on the scenario it now matches
+4. v is root
+   1. just mark it black. this will just reduce the black-height of the tree by 1
+ 

@@ -26,6 +26,50 @@ namespace csb
                 (void)node;
                 return std::move(root);
             }
+
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            erase_node(std::unique_ptr<node_type<T>> root, node_type<T> &target)
+            {
+
+                auto replacement = find_replacement(target);
+
+                // target is leaf node
+                if (replacement == nullptr)
+                {
+                    // remove node
+                    root = detach(std::move(root), target);
+                }
+                // target has 1 child
+                else if (target.left == nullptr || target.right == nullptr)
+                {
+                    auto &child = target.left ? target.left : target.right;
+                    child->parent = target.parent;
+                    // if target is root
+                    if (&target == root.get())
+                    {
+                        root = std::move(child);
+                    }
+                    else
+                    {
+                        if (target.parent->left.get() == &target)
+                        {
+                            target.parent->left = std::move(child);
+                        }
+                        else
+                        {
+                            target.parent->right = std::move(child);
+                        }
+                    }
+                }
+                else
+                {
+                    std::swap(target.t, replacement->t);
+                    root = erase_node(std::move(root), *replacement);
+                }
+
+                return std::move(root);
+            }
         };
 
     } // namespace impl
@@ -233,6 +277,11 @@ namespace csb
             }
         }
 
+        explicit binary_tree(std::unique_ptr<node_type> root)
+              : root(std::move(root)), _size(0)
+        {
+        }
+
         friend bool operator==(binary_tree const &l, binary_tree const &r)
         {
             return l._size == r._size &&
@@ -261,7 +310,21 @@ namespace csb
             ++_size;
         }
 
-        void erase(T const &t) { root = erase(root, t); }
+        void erase(T const &t)
+        {
+
+            if (root != nullptr)
+            {
+                auto target = root->find(t);
+
+                if (target != nullptr)
+                {
+                    --_size;
+                    root =
+                        BalancingPolicy::erase_node(std::move(root), *target);
+                }
+            }
+        }
 
         bool contains(T const &t) const { return find(t) != end(); }
 
@@ -336,57 +399,6 @@ namespace csb
         }
 
       private:
-        std::unique_ptr<node_type> erase(std::unique_ptr<node_type> &parent,
-                                         T const &t)
-        {
-            if (parent == nullptr)
-            {
-                return nullptr;
-            }
-
-            if (t < parent->t)
-            {
-                // target is in left subtree if present so erase from left
-                // subtree
-                parent->left = erase(parent->left, t);
-            }
-            else if (parent->t < t)
-            {
-                // target is in right subtree if present so erase from right
-                // subtree
-                parent->right = erase(parent->right, t);
-            }
-            else
-            {
-                // target is found
-
-                // 1 child or no children
-                if (parent->left == nullptr)
-                {
-                    // we know we are removing a ode and not going through any
-                    // other calls to erase
-                    --_size;
-                    return std::move(parent->right);
-                }
-                else if (parent->right == nullptr)
-                {
-                    // we know we are removing a ode and not going through any
-                    // other calls to erase
-                    --_size;
-                    return std::move(parent->left);
-                }
-                else
-                {
-                    // both children
-                    auto next = leftmost(parent->right.get());
-                    parent->t = next->t;
-                    parent->right = erase(parent->right, parent->t);
-                }
-            }
-
-            return std::move(parent);
-        }
-
         std::unique_ptr<node_type> root = nullptr;
         std::size_t _size = 0;
     };

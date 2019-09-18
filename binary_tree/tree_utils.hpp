@@ -189,6 +189,58 @@ namespace csb
     };
 
     template <typename T, typename Metadata>
+    binary_tree_node<T, Metadata> *
+    find_replacement(binary_tree_node<T, Metadata> &target)
+    {
+        if (target.left != nullptr && target.right != nullptr)
+        {
+            return leftmost(target.right.get());
+        }
+
+        if (target.left == nullptr && target.right == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (target.left == nullptr)
+        {
+            return target.right.get();
+        }
+        else
+        {
+            return target.left.get();
+        }
+    }
+
+    // Note, doesnt work with nodes with 2 children
+    template <typename T, typename Metadata>
+    std::unique_ptr<binary_tree_node<T, Metadata>>
+    detach(std::unique_ptr<binary_tree_node<T, Metadata>> root,
+           binary_tree_node<T, Metadata> &target,
+           std::unique_ptr<binary_tree_node<T, Metadata>> child = nullptr)
+    {
+
+        if (target.parent == nullptr)
+        { // root
+            if (child != nullptr)
+            {
+                child->parent = nullptr;
+            }
+            return std::move(child);
+        }
+        else if (is_left_child(target))
+        {
+            target.parent->left = std::move(child);
+        }
+        else
+        {
+            target.parent->right = std::move(child);
+        }
+
+        return std::move(root);
+    }
+
+    template <typename T, typename Metadata>
     binary_tree_node<T, Metadata> *leftmost(binary_tree_node<T, Metadata> *n)
     {
         while (n && n->left)
@@ -206,6 +258,12 @@ namespace csb
             n = n->right.get();
         }
         return n;
+    }
+
+    template <typename T, typename Metadata>
+    bool is_left_child(binary_tree_node<T, Metadata> const &n)
+    {
+        return (n.parent != nullptr && n.parent->left.get() == &n);
     }
 
 } // namespace csb
