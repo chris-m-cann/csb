@@ -236,6 +236,7 @@ namespace csb
                 binary_tree_node<T, Metadata> &target,
                 std::unique_ptr<binary_tree_node<T, Metadata>> child = nullptr)
             {
+                (void)target, (void)child;
                 // todo(chris) IMPLEMENT
                 return std::move(root);
             }
@@ -245,19 +246,19 @@ namespace csb
             erase_node_impl(std::unique_ptr<node_type<T>> root,
                             node_type<T> &target)
             {
-                auto child =
-                    target->left != nullptr ? target->left : target->right;
+                auto &child =
+                    target.left != nullptr ? target.left : target.right;
 
                 // if red then just delete
-                if (target.colour == Colour::Red)
+                if (target.metadata().colour == Colour::Red)
                 {
                     return detach(std::move(root), target, std::move(child));
                 }
 
                 // child is red, colour black and replace target with it
-                if (child != nullptr && child->colour == Colour::Red)
+                if (child != nullptr && child->metadata().colour == Colour::Red)
                 {
-                    child.colour = Colour::Black;
+                    child->metadata().colour = Colour::Black;
                     return detach(std::move(root), target, std::move(child));
                 }
 
@@ -268,9 +269,8 @@ namespace csb
     } // namespace impl
 
     template <typename T>
-    class red_black_tree : public binary_tree<T, impl::red_black_tree_balancing>
-    {
-    };
+    using red_black_tree = binary_tree<T, impl::red_black_tree_balancing>;
+
 } // namespace csb
 
 #endif // CSB_RED_BLACK_TREE_HPP
