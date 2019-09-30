@@ -294,6 +294,19 @@ namespace csb::test
             THEN("begin points to the root") { REQUIRE(*bt.begin() == 1); }
         }
 
+        GIVEN(" a binary tree with only a left subtree")
+        {
+            binary_tree bt{3, 2, 1};
+            THEN("iterating goes from leaf to root and stops there")
+            {
+                auto next = bt.begin();
+                REQUIRE(*next == 1);
+                REQUIRE(*++next == 2);
+                REQUIRE(*++next == 3);
+                REQUIRE(++next == bt.end());
+            }
+        }
+
         GIVEN("a tree with a left and right subtree")
         {
             binary_tree bt{5, 10, 2, -3, 8, 9, 7};

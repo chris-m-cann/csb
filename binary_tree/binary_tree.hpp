@@ -98,6 +98,12 @@ namespace csb
                     // leftmost member of that tree
                     np = leftmost(np->right.get());
                 }
+                else if (np->parent == nullptr)
+                {
+                    // if at the root and we have no right subtree then we are
+                    // at end
+                    np = nullptr;
+                }
                 else if (np == np->parent->left.get())
                 {
                     // if ive just visited the left binary_tree_node the parent
@@ -280,6 +286,7 @@ namespace csb
         explicit binary_tree(std::unique_ptr<node_type> root)
               : root(std::move(root)), _size(0)
         {
+            _size = std::distance(begin(), end());
         }
 
         friend bool operator==(binary_tree const &l, binary_tree const &r)

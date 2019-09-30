@@ -98,6 +98,31 @@ namespace csb
                    node.parent->parent->right.get() == node.parent;
         }
 
+        template <typename T>
+        bool is_red(binary_tree_node<T, red_black_node_meta_data> const *node)
+        {
+            return node != nullptr &&
+                   node->metadata().colour == impl::Colour::Red;
+        }
+
+        template <typename T>
+        bool is_black(binary_tree_node<T, red_black_node_meta_data> const *node)
+        {
+            return !is_red(node);
+        }
+
+        template <typename T>
+        bool is_root(binary_tree_node<T, red_black_node_meta_data> const *node)
+        {
+            return node != nullptr && node->parent == nullptr;
+        }
+
+        impl::Colour flipped(impl::Colour colour)
+        {
+            return colour == impl::Colour::Red ? impl::Colour::Black
+                                               : impl::Colour::Red;
+        }
+
         struct red_black_tree_balancing
         {
             using node_metadata_type = red_black_node_meta_data;
@@ -229,6 +254,202 @@ namespace csb
                 return std::move(root);
             }
 
+            /*
+             * s is black an has at least 1 red child, r
+             * rotate based on the position of s and r
+             */
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            case_1(std::unique_ptr<node_type<T>> root, node_type<T> *,
+                   node_type<T> *parent, node_type<T> *sibling)
+            {
+                auto &strong_parent = [&]() -> std::unique_ptr<node_type<T>> & {
+                    if (parent->parent == nullptr)
+                    {
+                        return root;
+                    }
+                    else if (is_left_child(*parent))
+                    {
+                        return parent->parent->left;
+                    }
+                    else
+                    {
+                        return parent->parent->right;
+                    }
+                }();
+
+                auto s_left = is_left_child(*sibling);
+                if (s_left)
+                {
+                    if (is_red(sibling->left.get()))
+                    {
+                        // left left case
+                        sibling->left->metadata().colour = impl::Colour::Black;
+                        strong_parent = right_rotate(std::move(strong_parent));
+                    }
+                    else
+                    {
+                        // left right case
+                        sibling->right->metadata().colour = impl::Colour::Black;
+                        parent->left = left_rotate(std::move(parent->left));
+                        strong_parent = right_rotate(std::move(strong_parent));
+                    }
+                }
+                else
+                {
+                    if (is_red(sibling->left.get()))
+                    {
+                        // right left case
+                        sibling->left->metadata().colour = impl::Colour::Black;
+                        parent->right = right_rotate(std::move(parent->right));
+                        strong_parent = left_rotate(std::move(strong_parent));
+                    }
+                    else
+                    {
+                        // right right case
+                        sibling->right->metadata().colour = impl::Colour::Black;
+                        strong_parent = left_rotate(std::move(strong_parent));
+                    }
+                }
+                return std::move(root);
+            }
+
+            /*
+             * s is black and both its children are black
+             * recolour sibling red
+             * if parent is red, colour it black and your done
+             * else recur on p
+             */
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            case_2(std::unique_ptr<node_type<T>> root, node_type<T> &parent,
+                   node_type<T> *sibling)
+            {
+
+                if (sibling != nullptr)
+                {
+                    sibling->metadata().colour = impl::Colour::Red;
+                }
+
+                if (parent.metadata().colour == impl::Colour::Red)
+                {
+                    parent.metadata().colour = impl::Colour::Black;
+                    return std::move(root);
+                }
+                else
+                {
+                    if (parent.parent == nullptr)
+                    {
+                        return case_4(std::move(root));
+                    }
+                    // recur
+                    auto &newSibling = (is_left_child(parent))
+                                           ? parent.parent->right
+                                           : parent.parent->left;
+                    return fix_double_black_impl(std::move(root),
+                                                 &parent,
+                                                 parent.parent,
+                                                 newSibling.get());
+                }
+            }
+
+            /*
+             * sibling is red
+             * flip p and s's colours
+             * rotate around s
+             * then recur
+             */
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            case_3(std::unique_ptr<node_type<T>> root, node_type<T> *,
+                   node_type<T> *parent, node_type<T> *sibling)
+            {
+
+                std::swap(sibling->metadata().colour,
+                          parent->metadata().colour);
+
+                auto &strong_parent = [&]() -> std::unique_ptr<node_type<T>> & {
+                    if (parent->parent == nullptr)
+                    {
+                        return root;
+                    }
+                    else if (is_left_child(*parent))
+                    {
+                        return parent->parent->left;
+                    }
+                    else
+                    {
+                        return parent->parent->right;
+                    }
+                }();
+
+                if (is_left_child(*sibling))
+                {
+                    strong_parent = right_rotate(std::move(strong_parent));
+                    return fix_double_black_impl(
+                        std::move(root),
+                        strong_parent->right->right.get(),
+                        strong_parent->right.get(),
+                        strong_parent->right->left.get());
+                }
+                else
+                {
+                    strong_parent = left_rotate(std::move(strong_parent));
+                    return fix_double_black_impl(
+                        std::move(root),
+                        strong_parent->left->left.get(),
+                        strong_parent->left.get(),
+                        strong_parent->left->right.get());
+                }
+            }
+
+            /*
+             * v is root, set black and return it
+             */
+            template <typename T>
+            static std::unique_ptr<node_type<T>>
+            case_4(std::unique_ptr<node_type<T>> root)
+            {
+                if (root != nullptr)
+                {
+                    root->metadata().colour = impl::Colour::Black;
+                }
+                return std::move(root);
+            }
+
+            template <typename T, typename Metadata>
+            static std::unique_ptr<binary_tree_node<T, Metadata>>
+            fix_double_black_impl(
+                std::unique_ptr<binary_tree_node<T, Metadata>> root,
+                binary_tree_node<T, Metadata> *doubleBlack,
+                binary_tree_node<T, Metadata> *parent,
+                binary_tree_node<T, Metadata> *sibling)
+            {
+
+                // scenario 4
+                if (parent == nullptr)
+                {
+                    return case_4(std::move(root));
+                }
+
+                // scenaio 3
+                if (is_red(sibling))
+                {
+                    return case_3(
+                        std::move(root), doubleBlack, parent, sibling);
+                }
+
+                // scenario 2
+                if (sibling == nullptr || (is_black(sibling->left.get()) &&
+                                           is_black(sibling->right.get())))
+                { // i.e. sibling is black
+                    return case_2(std::move(root), *parent, sibling);
+                }
+
+                // scenario 1
+                return case_1(std::move(root), doubleBlack, parent, sibling);
+            }
+
             template <typename T, typename Metadata>
             static std::unique_ptr<binary_tree_node<T, Metadata>>
             fix_double_black(
@@ -236,9 +457,34 @@ namespace csb
                 binary_tree_node<T, Metadata> &target,
                 std::unique_ptr<binary_tree_node<T, Metadata>> child = nullptr)
             {
-                (void)target, (void)child;
-                // todo(chris) IMPLEMENT
-                return std::move(root);
+                auto parent = target.parent;
+                auto doubleBlack = child.get();
+
+                binary_tree_node<T, Metadata> *sibling = nullptr;
+                if (parent == nullptr)
+                {
+                    sibling = nullptr;
+                }
+                else if (is_left_child(target))
+                {
+                    sibling = target.parent->right.get();
+                }
+                else
+                {
+                    sibling = target.parent->left.get();
+                }
+
+                root = detach(std::move(root), target, std::move(child));
+
+                if (root == nullptr)
+                {
+                    return nullptr;
+                }
+                else
+                {
+                    return fix_double_black_impl(
+                        std::move(root), doubleBlack, parent, sibling);
+                }
             }
 
             template <typename T>
@@ -250,13 +496,13 @@ namespace csb
                     target.left != nullptr ? target.left : target.right;
 
                 // if red then just delete
-                if (target.metadata().colour == Colour::Red)
+                if (is_red(&target))
                 {
                     return detach(std::move(root), target, std::move(child));
                 }
 
                 // child is red, colour black and replace target with it
-                if (child != nullptr && child->metadata().colour == Colour::Red)
+                if (is_red(child.get()))
                 {
                     child->metadata().colour = Colour::Black;
                     return detach(std::move(root), target, std::move(child));

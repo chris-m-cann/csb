@@ -89,7 +89,8 @@ If we find an imbalance the we solve it in several ways:
    3. else mark p as double black and recur with p playing the role of u/v
 3. s is red
    1. flip the colours of p and s (so s always becomes black)
-   2. recur. rotating based on the scenario it now matches
+   2. rotate around s (left if s = p->right and vice versa)
+   2. recur.
 4. v is root
    1. just mark it black. this will just reduce the black-height of the tree by 1
  

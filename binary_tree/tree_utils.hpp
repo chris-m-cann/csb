@@ -219,16 +219,17 @@ namespace csb
            binary_tree_node<T, Metadata> &target,
            std::unique_ptr<binary_tree_node<T, Metadata>> child = nullptr)
     {
+        if (child != nullptr)
+        {
+            child->parent = target.parent;
+        }
 
-        if (target.parent == nullptr)
-        { // root
-            if (child != nullptr)
-            {
-                child->parent = nullptr;
-            }
+        if (target.parent == nullptr) // target is root
+        {
             return std::move(child);
         }
-        else if (is_left_child(target))
+
+        if (is_left_child(target))
         {
             target.parent->left = std::move(child);
         }
