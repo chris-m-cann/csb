@@ -806,7 +806,7 @@ namespace csb
                 std::random_device rd2;
                 std::mt19937 gen2(rd());
 
-                while (values.size() > 1)
+                while (rb.size() > 1)
                 {
                     std::uniform_int_distribution<> dis2(0, values.size() - 1);
 
@@ -816,6 +816,8 @@ namespace csb
                     //                    values.size() << " idx = " << idx << "
                     //                    target = " << target << std::endl;
                     values.erase(values.begin() + idx);
+
+                    auto backup = rb;
 
                     rb.erase(target);
 

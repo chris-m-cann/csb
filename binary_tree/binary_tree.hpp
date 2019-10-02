@@ -302,6 +302,9 @@ namespace csb
 
         void add(T t)
         {
+            if (contains(t))
+                return;
+
             auto n = std::make_unique<node_type>(std::move(t));
             auto tmp = n.get();
 

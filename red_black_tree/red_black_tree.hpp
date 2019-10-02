@@ -284,14 +284,19 @@ namespace csb
                     if (is_red(sibling->left.get()))
                     {
                         // left left case
-                        sibling->left->metadata().colour = impl::Colour::Black;
+                        sibling->left->metadata().colour =
+                            sibling->metadata().colour;
+                        sibling->metadata().colour = parent->metadata().colour;
+                        parent->metadata().colour = impl::Colour::Black;
                         strong_parent = right_rotate(std::move(strong_parent));
                     }
                     else
                     {
                         // left right case
-                        sibling->right->metadata().colour = impl::Colour::Black;
+                        sibling->right->metadata().colour =
+                            parent->metadata().colour;
                         parent->left = left_rotate(std::move(parent->left));
+                        parent->metadata().colour = impl::Colour::Black;
                         strong_parent = right_rotate(std::move(strong_parent));
                     }
                 }
@@ -300,14 +305,19 @@ namespace csb
                     if (is_red(sibling->left.get()))
                     {
                         // right left case
-                        sibling->left->metadata().colour = impl::Colour::Black;
+                        sibling->left->metadata().colour =
+                            parent->metadata().colour;
                         parent->right = right_rotate(std::move(parent->right));
+                        parent->metadata().colour = impl::Colour::Black;
                         strong_parent = left_rotate(std::move(strong_parent));
                     }
                     else
                     {
                         // right right case
-                        sibling->right->metadata().colour = impl::Colour::Black;
+                        sibling->right->metadata().colour =
+                            sibling->metadata().colour;
+                        sibling->metadata().colour = parent->metadata().colour;
+                        parent->metadata().colour = impl::Colour::Black;
                         strong_parent = left_rotate(std::move(strong_parent));
                     }
                 }
