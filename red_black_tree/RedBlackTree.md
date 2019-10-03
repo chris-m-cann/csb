@@ -70,11 +70,13 @@ If we find an imbalance the we solve it in several ways:
  
 1. v's sibling (s) is black and at least one of s's children is red (r), then we do rotations based on the placements of s and r
    1. Left Left case: s is in parent p's left subtree and red child r is in s's left subtree
-        1. right rotate about s
-        2. recolour r as black
+        1. recolour r black (s's colour)
+        2. recolour s as p's colour
+        3. right rotate about s
    2. Right Right: s is p's right child. r is s's right child
-        1. left rotate about s
-        2. recolour r as black
+        1. recolour r black (s's colour)
+        2. recolour s as p's colour
+        3. left rotate about s
    3. Left Right: s is p's left child. r is s's right child
         1. right rotate about r
         2. swap colours of s and r
