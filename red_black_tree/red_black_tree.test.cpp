@@ -869,6 +869,8 @@ namespace csb
 
 } // namespace csb
 
+// i know this is technically undefined behaviour but it works and makes thigs
+// sooo much easier to debug
 namespace std
 {
     template <typename T, typename V>

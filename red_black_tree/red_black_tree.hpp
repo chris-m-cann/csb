@@ -158,11 +158,6 @@ namespace csb
             }
 
           private:
-            template <typename T> static bool is_black(node_type<T> *n)
-            {
-                return n == nullptr || n->metadata().colour == Colour::Black;
-            }
-
             template <typename T>
             static std::unique_ptr<node_type<T>>
             recolour(std::unique_ptr<node_type<T>> root, node_type<T> *node)
@@ -436,27 +431,23 @@ namespace csb
                 binary_tree_node<T, Metadata> *sibling)
             {
 
-                // scenario 4
                 if (parent == nullptr)
                 {
                     return case_4(std::move(root));
                 }
 
-                // scenaio 3
                 if (is_red(sibling))
                 {
                     return case_3(
                         std::move(root), doubleBlack, parent, sibling);
                 }
 
-                // scenario 2
                 if (sibling == nullptr || (is_black(sibling->left.get()) &&
                                            is_black(sibling->right.get())))
                 { // i.e. sibling is black
                     return case_2(std::move(root), *parent, sibling);
                 }
 
-                // scenario 1
                 return case_1(std::move(root), doubleBlack, parent, sibling);
             }
 

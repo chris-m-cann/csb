@@ -16,31 +16,38 @@ namespace csb
         Metadata &metadata() { return *this; }
         Metadata const &metadata() const { return *this; }
 
-        void add(std::unique_ptr<binary_tree_node> &v)
+        /** add node to bst. return whether or not node was added */
+        bool add(std::unique_ptr<binary_tree_node> &v)
         {
-            if (v->t <= t)
+            if (v->t < t)
             {
                 if (left == nullptr)
                 {
                     left = std::move(v);
                     left->parent = this;
+                    return true;
                 }
                 else
                 {
-                    left->add(v);
+                    return left->add(v);
                 }
             }
-            else
+            else if (t < v->t)
             {
                 if (right == nullptr)
                 {
                     right = std::move(v);
                     right->parent = this;
+                    return true;
                 }
                 else
                 {
-                    right->add(v);
+                    return right->add(v);
                 }
+            }
+            else
+            { // t == v->t
+                return false;
             }
         }
 

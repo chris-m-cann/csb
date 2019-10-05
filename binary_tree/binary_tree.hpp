@@ -23,6 +23,7 @@ namespace csb
             static std::unique_ptr<node_type<T>>
             balance(std::unique_ptr<node_type<T>> root, node_type<T> *node)
             {
+                // empty as there is no balancing a regular bst
                 (void)node;
                 return std::move(root);
             }
@@ -31,7 +32,7 @@ namespace csb
             static std::unique_ptr<node_type<T>>
             erase_node(std::unique_ptr<node_type<T>> root, node_type<T> &target)
             {
-
+                // regular bst deletion. no balancing needed
                 auto replacement = find_replacement(target);
 
                 // target is leaf node
@@ -44,23 +45,7 @@ namespace csb
                 else if (target.left == nullptr || target.right == nullptr)
                 {
                     auto &child = target.left ? target.left : target.right;
-                    child->parent = target.parent;
-                    // if target is root
-                    if (&target == root.get())
-                    {
-                        root = std::move(child);
-                    }
-                    else
-                    {
-                        if (target.parent->left.get() == &target)
-                        {
-                            target.parent->left = std::move(child);
-                        }
-                        else
-                        {
-                            target.parent->right = std::move(child);
-                        }
-                    }
+                    root = detach(std::move(root), target, std::move(child));
                 }
                 else
                 {
@@ -139,18 +124,30 @@ namespace csb
             binary_tree_iterator const &operator--()
             {
 
+                // np == end the start got to rightmost of root
                 if (np == nullptr)
                 {
                     np = rightmost(root);
                 }
+                // if np has left child then nex inline is down that subtree
                 else if (np->left != nullptr)
                 {
                     np = rightmost(np->left.get());
                 }
+                // if you are root and you dont have a left subtree then we are
+                // done
+                else if (np->parent == nullptr)
+                {
+                    np = nullptr;
+                }
+                // if we are our parents right subtree then the parent is next
+                // followed by its left subtree as they are all less than it
                 else if (np == np->parent->right.get())
                 {
                     np = np->parent;
                 }
+                // if weve come up from the left then keep going up until we
+                // arnt or untill we hit the root (and are therefore done
                 else
                 {
                     auto trail = np;
@@ -216,8 +213,6 @@ namespace csb
         binary_tree() = default;
         ~binary_tree() = default;
 
-        //        template<typename V, typename =
-        //        std::enable_if_t<std::is_copy_constructible_v<V>>>
         binary_tree(binary_tree const &other)
         {
             static_assert(std::is_copy_constructible_v<T>);
@@ -230,8 +225,6 @@ namespace csb
         {
         }
 
-        //        template<typename =
-        //        std::enable_if_t<std::is_copy_constructible_v<T>>>
         binary_tree &operator=(binary_tree const &other)
         {
             static_assert(std::is_copy_assignable_v<T>);
@@ -302,27 +295,26 @@ namespace csb
 
         void add(T t)
         {
-            if (contains(t))
-                return;
-
             auto n = std::make_unique<node_type>(std::move(t));
             auto tmp = n.get();
 
             if (root == nullptr)
             {
                 root = BalancingPolicy::balance(std::move(n), tmp);
+                _size = 1;
             }
             else
             {
-                root->add(n);
-                root = BalancingPolicy::balance(std::move(root), tmp);
+                if (root->add(n))
+                {
+                    root = BalancingPolicy::balance(std::move(root), tmp);
+                    ++_size;
+                }
             }
-            ++_size;
         }
 
         void erase(T const &t)
         {
-
             if (root != nullptr)
             {
                 auto target = root->find(t);
